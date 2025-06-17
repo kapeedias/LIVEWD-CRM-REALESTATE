@@ -93,13 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div
           class="page-content d-flex align-items-center justify-content-center">
           <div class="row w-100 mx-0 auth-page">
-            <?php if ($error): ?>
-        <p style="color:red;"><?= htmlspecialchars($error) ?></p>
-    <?php endif; ?>
-
-    <?php if ($success): ?>
-        <p style="color:green;"><?= $success ?></p>
-    <?php endif; ?>
             <div class="col-lg-4 mx-auto">
               <div class="card">
                 <div class="row">
@@ -112,6 +105,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       <hr />
                       Members Registration
                       <hr />
+                       <?php if ($error): ?>
+                          <p style="color:red;"><?= htmlspecialchars($error) ?></p>
+                      <?php endif; ?>
+
+                      <?php if ($success): ?>
+                          <p style="color:green;"><?= $success ?></p>
+                      <?php endif; ?>
                      <form class="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
                       <div class="form-group">
                         <label for="firstName">First Name</label>
@@ -168,7 +168,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="password" class="form-control" id="password" name="password">
                         <small class="form-text text-muted">Leave blank to auto-generate a strong password.</small>
                       </div>
+                        <?php if ($error): ?>
+                                <p style="color:red;"><?= htmlspecialchars($error) ?></p>
+                            <?php endif; ?>
 
+                            <?php if ($success): ?>
+                                <p style="color:green;"><?= $success ?></p>
+                        <?php endif; ?>
                       <div class="mt-3">
                         <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Register</button>
                       </div>
