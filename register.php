@@ -16,10 +16,6 @@ function verifyCsrfToken($token) {
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
 
-function generatePassword($length = 12) {
-    return bin2hex(random_bytes($length / 2)); // 12 chars
-}
-
 $error = '';
 $success = '';
 
