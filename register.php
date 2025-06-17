@@ -129,18 +129,12 @@ $csrfToken = generateCsrfToken();
     <link rel="stylesheet" href="assets/css/demo_1/style.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
-        <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
-<script>
-  grecaptcha.ready(function() {
-    grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', {action: 'register'}).then(function(token) {
-      // Add the token to a hidden input field inside your form
-      var recaptchaResponse = document.getElementById('recaptchaResponse');
-      if (recaptchaResponse) {
-        recaptchaResponse.value = token;
-      }
-    });
-  });
-</script>
+     <script src="https://www.google.com/recaptcha/api.js"></script>
+     <script>
+   function onSubmit(token) {
+     document.getElementById("forms-register").submit();
+   }
+ </script>
   </head>
   <body class="sidebar-dark">
     <div class="main-wrapper">
@@ -169,7 +163,7 @@ $csrfToken = generateCsrfToken();
                                 <p style="color:green;"><?= $success ?></p>
                                 <hr />
                         <?php endif; ?>
-                     <form class="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
+                     <form class="forms-register" id="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
                       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                       <div class="form-group">
                         <label for="firstName">First Name</label>
@@ -238,7 +232,7 @@ $csrfToken = generateCsrfToken();
                                 <hr />
                         <?php endif; ?>
                       <div class="mt-3">
-                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Register</button>
+                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white g-recaptcha" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY ?>" data-callback='onSubmit' data-action='submit'>Register</button>
                       </div>
 
                       <a href="login.php" class="d-block mt-3 text-right text-muted">Login</a>
