@@ -6,64 +6,106 @@ require_once __DIR__ . '/config/helpers.php';
 
 $pdo = Database::getInstance();
 
+function verifyRecaptcha($token, $secretKey) {
+    $url = 'https://www.google.com/recaptcha/api/siteverify';
+    $data = [
+        'secret' => $secretKey,
+        'response' => $token,
+        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? ''
+    ];
+
+    $options = [
+        'http' => [
+            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+            'method'  => 'POST',
+            'content' => http_build_query($data),
+            'timeout' => 10
+        ]
+    ];
+    $context  = stream_context_create($options);
+    $result = file_get_contents($url, false, $context);
+    if ($result === false) return false;
+
+    $json = json_decode($result, true);
+    return $json['success'] && $json['score'] >= 0.5; // adjust score threshold as needed
+}
+
+// Generate CSRF token if not exists
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $firstName = trim($_POST['first_name']);
-    $middleName = trim($_POST['middle_name']);
-    $lastName = trim($_POST['last_name']);
-    $email = trim($_POST['email']);
-    $phone = trim($_POST['tel']);
-    $city = trim($_POST['city']);
-    $zipcode = trim($_POST['zipcode']);
-    $province = trim($_POST['province']);
-    $jobTitle = trim($_POST['job_title']);
-    $country = trim($_POST['country'] ?? DEFAULT_COUNTRY);
-    $password = $_POST['password'] ?? '';
-  
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Invalid email format.";
-    } elseif (!empty($password) && ($msg = validatePasswordComplexity($password)) !== true) {
-        $error = $msg;
+    // Check CSRF token
+    if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $error = 'Invalid CSRF token.';
     } else {
-        // Check if email already exists
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
-        $stmt->execute([$email]);
-        $count = $stmt->fetchColumn();
-
-        if ($count > 0) {
-            $error = "Email address is already registered. Please use another or login.";
+        // Verify reCAPTCHA token
+        $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
+        if (empty($recaptchaToken) || !verifyRecaptcha($recaptchaToken, GOOGLE_RECAPTCHA_SECRET_KEY)) {
+            $error = 'reCAPTCHA verification failed. Please try again.';
         } else {
-            $password = empty($password) ? generatePassword() : $password;
-            $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
-            $ip = $_SERVER['REMOTE_ADDR'];
-            $user_name = $email; // can be customized
+            // Clean inputs
+            $firstName = trim($_POST['first_name']);
+            $middleName = trim($_POST['middle_name']);
+            $lastName = trim($_POST['last_name']);
+            $email = trim($_POST['email']);
+            $phone = trim($_POST['tel']);
+            $city = trim($_POST['city']);
+            $zipcode = trim($_POST['zipcode']);
+            $province = trim($_POST['province']);
+            $jobTitle = trim($_POST['job_title']);
+            $country = trim($_POST['country'] ?? DEFAULT_COUNTRY);
+            $password = $_POST['password'] ?? '';
 
-            try {
-                $stmt = $pdo->prepare("INSERT INTO general_info_users (
-                    first_name, middle_name, last_name, user_email, user_name,
-                    pwd, tel, city, zipcode, province, job_title,
-                    country, users_ip, date_created, user_level, approved
-                ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, 1
-                )");
+            // Validate email format
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $error = "Invalid email format.";
+            } elseif (!empty($password) && ($msg = validatePasswordComplexity($password)) !== true) {
+                $error = $msg;
+            } else {
+                // Check if user exists
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
+                $stmt->execute([$email]);
+                if ($stmt->fetchColumn() > 0) {
+                    $error = "Email already registered.";
+                } else {
+                    // Generate password if empty
+                    $password = empty($password) ? generatePassword() : $password;
+                    $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
+                    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+                    $ctime = time();
+                    $user_name = $email;
 
-                $stmt->execute([
-                    $firstName, $middleName, $lastName, $email, $user_name,
-                    $hashedPwd, $phone, $city, $zipcode, $province, $jobTitle,
-                    $country, $ip
-                ]);
+                    try {
+                        $stmt = $pdo->prepare("INSERT INTO general_info_users (
+                            first_name, middle_name, last_name, user_email, user_name,
+                            pwd, tel, city, zipcode, province, job_title,
+                            country, ipaddress, date_created, user_level, approved
+                        ) VALUES (
+                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, 1
+                        )");
 
-                $success = "<p style='color:green;'>✅ Registration successful. You can now <a href='login.php'>login</a>.</p>";
-            } catch (PDOException $e) {
-                $error = "Registration failed: " . $e->getMessage();
+                        $stmt->execute([
+                            $firstName, $middleName, $lastName, $email, $user_name,
+                            $hashedPwd, $phone, $city, $zipcode, $province, $jobTitle,
+                            $country, $ip
+                        ]);
+
+                        $success = "✅ Registration successful. You can now login.";
+                        // Optionally email the user their password or prompt them to reset it
+                    } catch (PDOException $e) {
+                        $error = "Registration failed: " . $e->getMessage();
+                    }
+                }
             }
         }
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
