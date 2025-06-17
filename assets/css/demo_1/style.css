@@ -25174,3 +25174,11 @@ div.tagsinput {
   float: right; }
 
 /*# sourceMappingURL=../maps/demo_1/style.css.map */
+.img-responsive-brand {
+  display: block;
+  max-width: 75%;
+  width: 200px;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
