@@ -18,44 +18,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $jobTitle = trim($_POST['job_title']);
     $country = trim($_POST['country'] ?? DEFAULT_COUNTRY);
     $password = $_POST['password'] ?? '';
-
+  
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Invalid email format.";
     } elseif (!empty($password) && ($msg = validatePasswordComplexity($password)) !== true) {
         $error = $msg;
     } else {
-        $password = empty($password) ? generatePassword() : $password;
-        $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
-        $ip = $_SERVER['REMOTE_ADDR'];
-        $activationCode = random_int(100000, 999999);
-        $ckey = bin2hex(random_bytes(16));
-        $ctime = time();
-        $md5_id = md5(uniqid($email, true));
-        $user_name = $email;
+        // Check if email already exists
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
+        $stmt->execute([$email]);
+        $count = $stmt->fetchColumn();
 
-        try {
-            $stmt = $pdo->prepare("INSERT INTO general_info_users (
-                first_name, middle_name, last_name, user_email, user_name,
-                pwd, tel, city, zipcode, province, job_title,
-                country, ipaddress, activation_code, ckey, ctime, email_verify, date_created, user_level, approved
-            ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, 1
-            )");
+        if ($count > 0) {
+            $error = "Email address is already registered. Please use another or login.";
+        } else {
+            $password = empty($password) ? generatePassword() : $password;
+            $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $user_name = $email; // can be customized
 
-            $stmt->execute([
-                $firstName, $middleName, $lastName, $email, $user_name,
-                $hashedPwd, $phone, $city, $zipcode, $province, $jobTitle,
-                $country, $ip, $activationCode, $ckey, $ctime, 'Sent'
-            ]);
+            try {
+                $stmt = $pdo->prepare("INSERT INTO general_info_users (
+                    first_name, middle_name, last_name, user_email, user_name,
+                    pwd, tel, city, zipcode, province, job_title,
+                    country, ipaddress, date_created, user_level, approved
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, 1
+                )");
 
-            // send activation email here if needed
-            echo "<p style='color:green;'>✅ Registration successful. Please check your email for activation.</p>";
-        } catch (PDOException $e) {
-            $error = "Registration failed: " . $e->getMessage();
+                $stmt->execute([
+                    $firstName, $middleName, $lastName, $email, $user_name,
+                    $hashedPwd, $phone, $city, $zipcode, $province, $jobTitle,
+                    $country, $ip
+                ]);
+
+                echo "<p style='color:green;'>✅ Registration successful. You can now <a href='login.php'>login</a>.</p>";
+            } catch (PDOException $e) {
+                $error = "Registration failed: " . $e->getMessage();
+            }
         }
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -97,69 +102,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       <hr />
                       Members Registration
                       <hr />
-                      <form class="forms-sample">
-                          <div class="form-group">
-                          <label for="firstName">First Name</label>
-                          <input type="text" class="form-control" id="firstName" name="first_name" required>
-                        </div>
+                     <form class="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
+                      <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" class="form-control" id="firstName" name="first_name" required>
+                      </div>
 
-                        <div class="form-group">
-                          <label for="middleName">Middle Name</label>
-                          <input type="text" class="form-control" id="middleName" name="middle_name">
-                        </div>
+                      <div class="form-group">
+                        <label for="middleName">Middle Name</label>
+                        <input type="text" class="form-control" id="middleName" name="middle_name">
+                      </div>
 
-                        <div class="form-group">
-                          <label for="lastName">Last Name</label>
-                          <input type="text" class="form-control" id="lastName" name="last_name" required>
-                        </div>
+                      <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" class="form-control" id="lastName" name="last_name" required>
+                      </div>
 
-                        <div class="form-group">
-                          <label for="InputEmail1">Email address</label>
-                          <input type="email" class="form-control" id="InputEmail1" name="email" placeholder="Email" required>
-                        </div>
+                      <div class="form-group">
+                        <label for="InputEmail1">Email address</label>
+                        <input type="email" class="form-control" id="InputEmail1" name="email" placeholder="Email" required>
+                      </div>
 
-                        <div class="form-group">
-                          <label for="tel">Phone (format: 123.456.7890)</label>
-                          <input type="tel" class="form-control" id="tel" name="tel" required>
-                        </div>
+                      <div class="form-group">
+                        <label for="tel">Phone (format: 123.456.7890)</label>
+                        <input type="tel" pattern="\d{3}\.\d{3}\.\d{4}" class="form-control" id="tel" name="tel" placeholder="123.456.7890" required>
+                      </div>
 
-                        <div class="form-group">
-                          <label for="city">City</label>
-                          <input type="text" class="form-control" id="city" name="city" required>
-                        </div>
+                      <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" class="form-control" id="city" name="city" required>
+                      </div>
 
-                        <div class="form-group">
-                          <label for="zipcode">Zipcode</label>
-                          <input type="text" class="form-control" id="zipcode" name="zipcode" required>
-                        </div>
+                      <div class="form-group">
+                        <label for="zipcode">Zipcode</label>
+                        <input type="text" class="form-control" id="zipcode" name="zipcode" required>
+                      </div>
 
-                        <div class="form-group">
-                          <label for="province">Province</label>
-                          <input type="text" class="form-control" id="province" name="province" required>
-                        </div>
+                      <div class="form-group">
+                        <label for="province">Province</label>
+                        <input type="text" class="form-control" id="province" name="province" required>
+                      </div>
 
-                        <div class="form-group">
-                          <label for="country">Country</label>
-                          <input type="text" class="form-control" id="country" name="country" value="Canada" required>
-                        </div>
+                      <div class="form-group">
+                        <label for="country">Country</label>
+                        <input type="text" class="form-control" id="country" name="country" value="Canada" required>
+                      </div>
 
-                        <div class="form-group">
-                          <label for="jobTitle">Job Title</label>
-                          <input type="text" class="form-control" id="jobTitle" name="job_title">
-                        </div>
+                      <div class="form-group">
+                        <label for="jobTitle">Job Title</label>
+                        <input type="text" class="form-control" id="jobTitle" name="job_title">
+                      </div>
 
-                        <div class="form-group">
-                          <label for="password">Password (optional)</label>
-                          <input type="password" class="form-control" id="password" name="password">
-                          <small class="form-text text-muted">Leave blank to auto-generate a strong password.</small>
-                        </div>
-                        <div class="mt-3">
-                          <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Register</button>  
-                        </div>
-                        <a href="login.php"
-                          class="d-block mt-3 text-right text-muted">Login
-                        </a>
-                      </form>
+                      <div class="form-group">
+                        <label for="password">Password (optional)</label>
+                        <input type="password" class="form-control" id="password" name="password">
+                        <small class="form-text text-muted">Leave blank to auto-generate a strong password.</small>
+                      </div>
+
+                      <div class="mt-3">
+                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Register</button>
+                      </div>
+
+                      <a href="login.php" class="d-block mt-3 text-right text-muted">Login</a>
+                    </form>
+
                     </div>
                   </div>
                 </div>
