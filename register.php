@@ -18,6 +18,7 @@ function verifyCsrfToken($token) {
 
 $error = '';
 $success = '';
+global $csrfToken;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF token check
@@ -128,6 +129,18 @@ $csrfToken = generateCsrfToken();
     <link rel="stylesheet" href="assets/css/demo_1/style.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
+        <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
+<script>
+  grecaptcha.ready(function() {
+    grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', {action: 'register'}).then(function(token) {
+      // Add the token to a hidden input field inside your form
+      var recaptchaResponse = document.getElementById('recaptchaResponse');
+      if (recaptchaResponse) {
+        recaptchaResponse.value = token;
+      }
+    });
+  });
+</script>
   </head>
   <body class="sidebar-dark">
     <div class="main-wrapper">
@@ -241,18 +254,7 @@ $csrfToken = generateCsrfToken();
         </div>
       </div>
     </div>
-    <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
-<script>
-  grecaptcha.ready(function() {
-    grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', {action: 'register'}).then(function(token) {
-      // Add the token to a hidden input field inside your form
-      var recaptchaResponse = document.getElementById('recaptchaResponse');
-      if (recaptchaResponse) {
-        recaptchaResponse.value = token;
-      }
-    });
-  });
-</script>
+
     <!-- core:js -->
     <script src="assets/vendors/core/core.js"></script>
     <!-- endinject -->
