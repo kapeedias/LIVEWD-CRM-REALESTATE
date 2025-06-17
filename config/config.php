@@ -47,6 +47,8 @@ define('GOOGLE_MAPS_API_KEY', 'your-google-maps-api-key');
 define('GOOGLE_CALENDAR_CLIENT_ID', 'your-google-calendar-client-id');
 define('GOOGLE_CALENDAR_CLIENT_SECRET', 'your-google-calendar-client-secret');
 define('GOOGLE_CALENDAR_REDIRECT_URI', SITE_URL . 'google-calendar-callback.php');
+define('GOOGLE_RECAPTCHA_SITE_KEY', '6LcylWMrAAAAALBEakKAj7-UloeBxp__jDjA4d4Z');
+define('GOOGLE_RECAPTCHA_SECRET_KEY', '6LcylWMrAAAAAAVJufJCXPNT3AAueRBqu2TaxaBz');
 
 // Token Expiration
 define('TOKEN_EXPIRY_MINUTES', 30);
