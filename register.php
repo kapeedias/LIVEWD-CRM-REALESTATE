@@ -4,7 +4,7 @@ require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/db.php';
 
 $pdo = Database::getInstance();
-
+global $csrfToken;
 function generateCsrfToken() {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -130,6 +130,13 @@ $csrfToken = generateCsrfToken();
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
      <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
+ <script>
+      grecaptcha.ready(function () {
+          grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', { action: 'register' }).then(function (token) {
+              document.getElementById('recaptchaResponse').value = token;
+          });
+      });
+    </script>
 
   </head>
   <body class="sidebar-dark">
@@ -252,13 +259,6 @@ $csrfToken = generateCsrfToken();
     <!-- inject:js -->
     <script src="assets/vendors/feather-icons/feather.min.js"></script>
     <script src="assets/js/template.js"></script>
-    <script>
-grecaptcha.ready(function () {
-    grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', { action: 'register' }).then(function (token) {
-        document.getElementById('recaptchaResponse').value = token;
-    });
-});
-</script>
-
+   
   </body>
 </html>
