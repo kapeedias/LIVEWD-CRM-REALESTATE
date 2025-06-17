@@ -18,7 +18,7 @@ function verifyCsrfToken($token) {
 
 $error = '';
 $success = '';
-$csrfToken = $_SESSION['csrf_token'];
+echo $csrfToken = $_SESSION['csrf_token'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF token check
