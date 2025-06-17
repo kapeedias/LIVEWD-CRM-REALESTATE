@@ -203,6 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                       <div class="form-group">
                         <label for="jobTitle">Job Title</label>
+                       <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
                         <div class="g-recaptcha" name ="g-recaptcha-response" id = "g-recaptcha-response" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></div>
                         <input type="text" class="form-control" id="jobTitle" name="job_title">
                       </div>
@@ -238,6 +239,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </div>
     </div>
+    <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
+<script>
+  grecaptcha.ready(function() {
+    grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', {action: 'register'}).then(function(token) {
+      // Add the token to a hidden input field inside your form
+      var recaptchaResponse = document.getElementById('recaptchaResponse');
+      if (recaptchaResponse) {
+        recaptchaResponse.value = token;
+      }
+    });
+  });
+</script>
     <!-- core:js -->
     <script src="assets/vendors/core/core.js"></script>
     <!-- endinject -->
