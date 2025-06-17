@@ -1,0 +1,89 @@
+<?php
+// File: config/config.php
+
+// App Metadata
+define('APP_NAME', 'MySecureApp');
+define('SUPPORT_EMAIL', 'support@yourdomain.com');
+
+// Base Domain URL - strict validation domain
+$allowed_domain = 'yourdomain.com';
+$current_domain = $_SERVER['HTTP_HOST'] ?? '';
+
+if (stripos($current_domain, $allowed_domain) === false) {
+    header('HTTP/1.1 403 Forbidden');
+    exit('Access denied. Unauthorized domain.');
+}
+
+define('BASE_URL', (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $allowed_domain);
+define('SITE_URL', BASE_URL . '/');
+
+define('APP_ROOT', dirname(__DIR__));
+
+// Login/Reset URL (can be routed to actual files)
+define('LOGIN_URL', SITE_URL . 'login.php');
+define('RESET_URL', SITE_URL . 'reset_password.php');
+
+// Email settings
+define('EMAIL_FROM', 'no-reply@' . $allowed_domain);
+define('EMAIL_FROM_NAME', 'MySecureApp Support');
+define('SMTP_HOST', 'smtp.' . $allowed_domain);
+define('SMTP_PORT', 587);
+define('SMTP_USER', 'your-smtp-username');
+define('SMTP_PASS', 'your-smtp-password');
+
+// SendGrid settings
+define('SENDGRID_API_KEY', 'your-sendgrid-api-key');
+define('SENDGRID_SENDER_EMAIL', 'no-reply@' . $allowed_domain);
+define('SENDGRID_SENDER_NAME', 'MySecureApp');
+
+// Twilio SMS/WhatsApp settings
+define('TWILIO_ACCOUNT_SID', 'your-twilio-account-sid');
+define('TWILIO_AUTH_TOKEN', 'your-twilio-auth-token');
+define('TWILIO_SMS_FROM', '+1234567890');
+define('TWILIO_WHATSAPP_FROM', 'whatsapp:+1234567890');
+
+// Google APIs
+define('GOOGLE_MAPS_API_KEY', 'your-google-maps-api-key');
+define('GOOGLE_CALENDAR_CLIENT_ID', 'your-google-calendar-client-id');
+define('GOOGLE_CALENDAR_CLIENT_SECRET', 'your-google-calendar-client-secret');
+define('GOOGLE_CALENDAR_REDIRECT_URI', SITE_URL . 'google-calendar-callback.php');
+
+// Token Expiration
+define('TOKEN_EXPIRY_MINUTES', 30);
+define('REMEMBER_ME_EXPIRY_DAYS', 7);
+
+// Default User Info
+define('DEFAULT_COUNTRY', 'Canada');
+
+// CDN Integration
+define('USE_CDN', true); // Toggle CDN usage
+
+// CDN Base URLs
+define('CDN_AWS_URL', 'https://your-bucket-name.s3.amazonaws.com');
+define('CDN_AZURE_URL', 'https://yourstorageaccount.blob.core.windows.net/container-name');
+define('CDN_GCP_URL', 'https://storage.googleapis.com/your-bucket-name');
+
+// Select active CDN
+// Options: AWS, AZURE, GCP
+define('ACTIVE_CDN', 'AWS');
+
+// Return active CDN base URL
+function getCdnBaseUrl()
+{
+    switch (ACTIVE_CDN) {
+        case 'AWS':
+            return CDN_AWS_URL;
+        case 'AZURE':
+            return CDN_AZURE_URL;
+        case 'GCP':
+            return CDN_GCP_URL;
+        default:
+            return SITE_URL . 'assets';
+    }
+}
+
+// Helper to get full path to CDN file
+function cdn_asset($path)
+{
+    return rtrim(getCdnBaseUrl(), '/') . '/' . ltrim($path, '/');
+}

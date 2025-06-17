@@ -1,3 +1,51 @@
+<?php
+session_start();
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/config/helpers.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        exit('Invalid email format.');
+    }
+
+    try {
+        $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            exit('User not found.');
+        }
+
+        if ((int)$user['banned'] === 1) {
+            exit('Your account has been banned.');
+        }
+
+        if ((int)$user['approved'] !== 1) {
+            exit('Your account is not approved yet.');
+        }
+
+        if (!password_verify($password, $user['pwd'])) {
+            exit('Incorrect password.');
+        }
+
+        // Password is correct, set session
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_name'] = $user['first_name'];
+
+        echo "<h3>Login successful. Welcome, " . htmlspecialchars($user['first_name']) . "!</h3>";
+        echo "<a href='myaccount.php'>Go to Dashboard</a>";
+
+    } catch (PDOException $e) {
+        error_log("LOGIN ERROR: " . $e->getMessage());
+        exit('Login failed. Please try again later.');
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
