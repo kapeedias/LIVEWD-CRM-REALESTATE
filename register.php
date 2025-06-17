@@ -1,109 +1,103 @@
 <?php
 session_start();
-require_once __DIR__ . '/config/config.php';
-require_once __DIR__ . '/config/db.php';
-require_once __DIR__ . '/config/helpers.php';
+require_once __DIR__ . '/config/config.php';  // Should define SITE_URL, DB creds, RECAPTCHA_SITE_KEY, RECAPTCHA_SECRET_KEY, etc.
+require_once __DIR__ . '/config/db.php';      // Your Database class
+require_once __DIR__ . '/config/helpers.php'; // For validatePasswordComplexity(), generatePassword(), etc.
 
 $pdo = Database::getInstance();
-
-function verifyRecaptcha($token, $secretKey) {
-    $url = 'https://www.google.com/recaptcha/api/siteverify';
-    $data = [
-        'secret' => $secretKey,
-        'response' => $token,
-        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? ''
-    ];
-
-    $options = [
-        'http' => [
-            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-            'method'  => 'POST',
-            'content' => http_build_query($data),
-            'timeout' => 10
-        ]
-    ];
-    $context  = stream_context_create($options);
-    $result = file_get_contents($url, false, $context);
-    if ($result === false) return false;
-
-    $json = json_decode($result, true);
-    return $json['success'] && $json['score'] >= 0.5; // adjust score threshold as needed
-}
-
-// Generate CSRF token if not exists
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
 
 $error = '';
 $success = '';
 
+// Generate CSRF token if not exists
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Check CSRF token
-    if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
-        $error = 'Invalid CSRF token.';
+    // Validate CSRF token
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $error = "Invalid CSRF token.";
     } else {
-        // Verify reCAPTCHA token
-        $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
-        if (empty($recaptchaToken) || !verifyRecaptcha($recaptchaToken, GOOGLE_RECAPTCHA_SECRET_KEY)) {
-            $error = 'reCAPTCHA verification failed. Please try again.';
+        // Validate Google reCAPTCHA
+        $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+        $recaptchaUrl = 'https://www.google.com/recaptcha/api/siteverify';
+        $recaptchaSecret = RECAPTCHA_SECRET_KEY; // from config.php
+
+        // Make POST request to verify captcha
+        $response = file_get_contents($recaptchaUrl . '?secret=' . urlencode($recaptchaSecret) . '&response=' . urlencode($recaptchaResponse) . '&remoteip=' . $_SERVER['REMOTE_ADDR']);
+        $responseData = json_decode($response);
+
+        if (!$responseData->success) {
+            $error = "Captcha verification failed. Please try again.";
+        }
+    }
+
+    if (!$error) {
+        // Sanitize and trim inputs
+        $firstName = trim($_POST['first_name'] ?? '');
+        $middleName = trim($_POST['middle_name'] ?? '');
+        $lastName = trim($_POST['last_name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $phone = trim($_POST['tel'] ?? '');
+        $city = trim($_POST['city'] ?? '');
+        $zipcode = trim($_POST['zipcode'] ?? '');
+        $province = trim($_POST['province'] ?? '');
+        $jobTitle = trim($_POST['job_title'] ?? '');
+        $country = trim($_POST['country'] ?? DEFAULT_COUNTRY);
+        $password = $_POST['password'] ?? '';
+
+        // Validate email format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = "Invalid email format.";
+        } elseif (!empty($password) && ($msg = validatePasswordComplexity($password)) !== true) {
+            $error = $msg;
         } else {
-            // Clean inputs
-            $firstName = trim($_POST['first_name']);
-            $middleName = trim($_POST['middle_name']);
-            $lastName = trim($_POST['last_name']);
-            $email = trim($_POST['email']);
-            $phone = trim($_POST['tel']);
-            $city = trim($_POST['city']);
-            $zipcode = trim($_POST['zipcode']);
-            $province = trim($_POST['province']);
-            $jobTitle = trim($_POST['job_title']);
-            $country = trim($_POST['country'] ?? DEFAULT_COUNTRY);
-            $password = $_POST['password'] ?? '';
+            // Check if email already exists
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
+            $stmt->execute([$email]);
+            $exists = $stmt->fetchColumn();
 
-            // Validate email format
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $error = "Invalid email format.";
-            } elseif (!empty($password) && ($msg = validatePasswordComplexity($password)) !== true) {
-                $error = $msg;
+            if ($exists) {
+                $error = "Email is already registered.";
             } else {
-                // Check if user exists
-                $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
-                $stmt->execute([$email]);
-                if ($stmt->fetchColumn() > 0) {
-                    $error = "Email already registered.";
-                } else {
-                    // Generate password if empty
-                    $password = empty($password) ? generatePassword() : $password;
-                    $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
-                    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
-                    $ctime = time();
-                    $user_name = $email;
+                // Generate password if empty
+                $password = empty($password) ? generatePassword() : $password;
+                $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $activationCode = random_int(100000, 999999);
+                $ckey = bin2hex(random_bytes(16));
+                $ctime = time();
+                $user_name = $email;
 
-                    try {
-                        $stmt = $pdo->prepare("INSERT INTO general_info_users (
-                            first_name, middle_name, last_name, user_email, user_name,
-                            pwd, tel, city, zipcode, province, job_title,
-                            country, ipaddress, date_created, user_level, approved
-                        ) VALUES (
-                            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, 1
-                        )");
+                try {
+                    $stmt = $pdo->prepare("INSERT INTO general_info_users (
+                        first_name, middle_name, last_name, user_email, user_name,
+                        pwd, tel, city, zipcode, province, job_title,
+                        country, ipaddress, activation_code, ckey, ctime, email_verify, date_created, user_level, approved
+                    ) VALUES (
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, 1
+                    )");
 
-                        $stmt->execute([
-                            $firstName, $middleName, $lastName, $email, $user_name,
-                            $hashedPwd, $phone, $city, $zipcode, $province, $jobTitle,
-                            $country, $ip
-                        ]);
+                    $stmt->execute([
+                        $firstName, $middleName, $lastName, $email, $user_name,
+                        $hashedPwd, $phone, $city, $zipcode, $province, $jobTitle,
+                        $country, $ip, $activationCode, $ckey, $ctime, 'Sent'
+                    ]);
 
-                        $success = "✅ Registration successful. You can now login.";
-                        // Optionally email the user their password or prompt them to reset it
-                    } catch (PDOException $e) {
-                        $error = "Registration failed: " . $e->getMessage();
-                    }
+                    $success = "✅ Registration successful.";
+                    // Unset CSRF token to prevent resubmission
+                    unset($_SESSION['csrf_token']);
+                } catch (PDOException $e) {
+                    $error = "Registration failed: " . htmlspecialchars($e->getMessage());
                 }
             }
         }
     }
+    // Regenerate CSRF token after processing POST
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    $csrf_token = $_SESSION['csrf_token'];
 }
 ?>
 
@@ -204,6 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                       <div class="form-group">
                         <label for="jobTitle">Job Title</label>
+                        <div class="g-recaptcha" data-sitekey="<?= RECAPTCHA_SITE_KEY ?>"></div>
                         <input type="text" class="form-control" id="jobTitle" name="job_title">
                       </div>
 
