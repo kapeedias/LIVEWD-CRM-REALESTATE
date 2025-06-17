@@ -3,6 +3,7 @@ session_start();
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
+
 $pdo = Database::getInstance();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -62,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>NobleUI Responsive Bootstrap 4 Dashboard Template</title>
+    <title><?= APP_NAME ?> - Register</title>
     <!-- core:css -->
     <link rel="stylesheet" href="assets/vendors/core/core.css">
     <!-- endinject -->
@@ -95,24 +96,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       </a>
                       <hr />
                       <form class="forms-sample">
+                          <div class="form-group">
+                          <label for="firstName">First Name</label>
+                          <input type="text" class="form-control" id="firstName" name="first_name" required>
+                        </div>
+
+                        <div class="form-group">
+                          <label for="middleName">Middle Name</label>
+                          <input type="text" class="form-control" id="middleName" name="middle_name">
+                        </div>
+
+                        <div class="form-group">
+                          <label for="lastName">Last Name</label>
+                          <input type="text" class="form-control" id="lastName" name="last_name" required>
+                        </div>
+
                         <div class="form-group">
                           <label for="InputEmail1">Email address</label>
-                          <input type="email" class="form-control"
-                            id="InputEmail1" placeholder="Email">
+                          <input type="email" class="form-control" id="InputEmail1" name="email" placeholder="Email" required>
                         </div>
+
                         <div class="form-group">
-                          <label for="InputPassword1">Password</label>
-                          <input type="password" class="form-control"
-                            id="InputPassword1"
-                            autocomplete="current-password"
-                            placeholder="Password">
+                          <label for="tel">Phone (format: 123.456.7890)</label>
+                          <input type="tel" class="form-control" id="tel" name="tel" required>
                         </div>
-                        <div
-                          class="form-check form-check-flat form-check-primary">
-                          <label class="form-check-label">
-                            <input type="checkbox" class="form-check-input">
-                            Remember me
-                          </label>
+
+                        <div class="form-group">
+                          <label for="city">City</label>
+                          <input type="text" class="form-control" id="city" name="city" required>
+                        </div>
+
+                        <div class="form-group">
+                          <label for="zipcode">Zipcode</label>
+                          <input type="text" class="form-control" id="zipcode" name="zipcode" required>
+                        </div>
+
+                        <div class="form-group">
+                          <label for="province">Province</label>
+                          <input type="text" class="form-control" id="province" name="province" required>
+                        </div>
+
+                        <div class="form-group">
+                          <label for="country">Country</label>
+                          <input type="text" class="form-control" id="country" name="country" value="Canada" required>
+                        </div>
+
+                        <div class="form-group">
+                          <label for="jobTitle">Job Title</label>
+                          <input type="text" class="form-control" id="jobTitle" name="job_title">
+                        </div>
+
+                        <div class="form-group">
+                          <label for="password">Password (optional)</label>
+                          <input type="password" class="form-control" id="password" name="password">
+                          <small class="form-text text-muted">Leave blank to auto-generate a strong password.</small>
                         </div>
                         <div class="mt-3">
                           <a href="myaccount.html"

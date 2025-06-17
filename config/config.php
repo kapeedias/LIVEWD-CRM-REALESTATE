@@ -87,3 +87,15 @@ function cdn_asset($path)
 {
     return rtrim(getCdnBaseUrl(), '/') . '/' . ltrim($path, '/');
 }
+// Basic password complexity check
+function validatePasswordComplexity($password) {
+    if (strlen($password) < 8) return "Password must be at least 8 characters.";
+    if (!preg_match('/[A-Z]/', $password)) return "Password must include an uppercase letter.";
+    if (!preg_match('/[a-z]/', $password)) return "Password must include a lowercase letter.";
+    if (!preg_match('/[0-9]/', $password)) return "Password must include a number.";
+    return true;
+}
+
+function generatePassword($length = 12) {
+    return bin2hex(random_bytes($length/2));
+}
