@@ -21,17 +21,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Invalid CSRF token.";
     } else {
         // Validate Google reCAPTCHA
-        $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
-        $recaptchaUrl = 'https://www.google.com/recaptcha/api/siteverify';
         $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY; // from config.php
-
-        // Make POST request to verify captcha
-        $response = file_get_contents($recaptchaUrl . '?secret=' . urlencode($recaptchaSecret) . '&response=' . urlencode($recaptchaResponse) . '&remoteip=' . $_SERVER['REMOTE_ADDR']);
-        $responseData = json_decode($response);
-
+        $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+        if (empty($recaptchaResponse)) {
+        $error = "Captcha verification failed. Please try again. - Empty";
+        } else {
+          // Make POST request to verify captcha
+          $response = file_get_contents($recaptchaUrl . '?secret=' . urlencode($recaptchaSecret) . '&response=' . urlencode($recaptchaResponse) . '&remoteip=' . $_SERVER['REMOTE_ADDR']);
+          $responseData = json_decode($response);
+          $recaptchaUrl = 'https://www.google.com/recaptcha/api/siteverify';
         if (!$responseData->success) {
             $error = "Captcha verification failed. Please try again.";
         }
+        }
+         
+     
     }
 
     if (!$error) {
