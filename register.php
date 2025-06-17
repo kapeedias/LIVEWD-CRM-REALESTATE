@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Validate Google reCAPTCHA
         $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
         $recaptchaUrl = 'https://www.google.com/recaptcha/api/siteverify';
-        $recaptchaSecret = RECAPTCHA_SECRET_KEY; // from config.php
+        $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY; // from config.php
 
         // Make POST request to verify captcha
         $response = file_get_contents($recaptchaUrl . '?secret=' . urlencode($recaptchaSecret) . '&response=' . urlencode($recaptchaResponse) . '&remoteip=' . $_SERVER['REMOTE_ADDR']);
@@ -198,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                       <div class="form-group">
                         <label for="jobTitle">Job Title</label>
-                        <div class="g-recaptcha" data-sitekey="<?= RECAPTCHA_SITE_KEY ?>"></div>
+                        <div class="g-recaptcha" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></div>
                         <input type="text" class="form-control" id="jobTitle" name="job_title">
                       </div>
 
