@@ -3,7 +3,7 @@ class Database {
     private $host = 'localhost';
     private $db   = 'gobchi_livewd_2k19';
     private $user = 'saiadmin';
-    private $pass = 'K1{[CDUJG;5h';
+    private $pass = 'F06A!=5PN4e[';
     private $charset = 'utf8mb4';
 
     private $pdo;
@@ -18,9 +18,6 @@ class Database {
         ];
         try {
             $this->pdo = new PDO($dsn, $this->user, $this->pass, $options);
-            if($this){
-                echo "Connected Successfully to database";
-            }
         } catch (PDOException $e) {
             // Log error or handle it appropriately
             throw new PDOException($e->getMessage(), (int)$e->getCode());
@@ -34,3 +31,16 @@ class Database {
         return self::$instance;
     }
 }
+
+
+/* to test the connectivity of the database host uncomment the below code and run it
+
+
+try {
+    $pdo = Database::getInstance();
+    echo "<p style='color: green;'>✅ Database connection successful.</p>";
+} catch (PDOException $e) {
+    echo "<p style='color: red;'>❌ Connection failed: " . htmlspecialchars($e->getMessage()) . "</p>";
+}
+
+*/
