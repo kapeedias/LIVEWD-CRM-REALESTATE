@@ -6,6 +6,9 @@ require_once __DIR__ . '/config/helpers.php';
 
 $pdo = Database::getInstance();
 
+$error = '';
+$success = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $firstName = trim($_POST['first_name']);
     $middleName = trim($_POST['middle_name']);
@@ -90,6 +93,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div
           class="page-content d-flex align-items-center justify-content-center">
           <div class="row w-100 mx-0 auth-page">
+            <?php if ($error): ?>
+        <p style="color:red;"><?= htmlspecialchars($error) ?></p>
+    <?php endif; ?>
+
+    <?php if ($success): ?>
+        <p style="color:green;"><?= $success ?></p>
+    <?php endif; ?>
             <div class="col-lg-4 mx-auto">
               <div class="card">
                 <div class="row">
