@@ -1,47 +1,57 @@
 <?php
 session_start();
+require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
+$pdo = Database::getInstance();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
+    $firstName = trim($_POST['first_name']);
+    $middleName = trim($_POST['middle_name']);
+    $lastName = trim($_POST['last_name']);
+    $email = trim($_POST['email']);
+    $phone = trim($_POST['tel']);
+    $city = trim($_POST['city']);
+    $zipcode = trim($_POST['zipcode']);
+    $province = trim($_POST['province']);
+    $jobTitle = trim($_POST['job_title']);
+    $country = trim($_POST['country'] ?? DEFAULT_COUNTRY);
     $password = $_POST['password'] ?? '';
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        exit('Invalid email format.');
-    }
+        $error = "Invalid email format.";
+    } elseif (!empty($password) && ($msg = validatePasswordComplexity($password)) !== true) {
+        $error = $msg;
+    } else {
+        $password = empty($password) ? generatePassword() : $password;
+        $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $activationCode = random_int(100000, 999999);
+        $ckey = bin2hex(random_bytes(16));
+        $ctime = time();
+        $md5_id = md5(uniqid($email, true));
+        $user_name = $email;
 
-    try {
-        $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $pdo->prepare("INSERT INTO general_info_users (
+                first_name, middle_name, last_name, user_email, user_name,
+                pwd, tel, city, zipcode, province, job_title,
+                country, ipaddress, activation_code, ckey, ctime, email_verify, date_created, user_level, approved
+            ) VALUES (
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, 1
+            )");
 
-        if (!$user) {
-            exit('User not found.');
+            $stmt->execute([
+                $firstName, $middleName, $lastName, $email, $user_name,
+                $hashedPwd, $phone, $city, $zipcode, $province, $jobTitle,
+                $country, $ip, $activationCode, $ckey, $ctime, 'Sent'
+            ]);
+
+            // send activation email here if needed
+            echo "<p style='color:green;'>✅ Registration successful. Please check your email for activation.</p>";
+        } catch (PDOException $e) {
+            $error = "Registration failed: " . $e->getMessage();
         }
-
-        if ((int)$user['banned'] === 1) {
-            exit('Your account has been banned.');
-        }
-
-        if ((int)$user['approved'] !== 1) {
-            exit('Your account is not approved yet.');
-        }
-
-        if (!password_verify($password, $user['pwd'])) {
-            exit('Incorrect password.');
-        }
-
-        // Password is correct, set session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_name'] = $user['first_name'];
-
-        echo "<h3>Login successful. Welcome, " . htmlspecialchars($user['first_name']) . "!</h3>";
-        echo "<a href='myaccount.php'>Go to Dashboard</a>";
-
-    } catch (PDOException $e) {
-        error_log("LOGIN ERROR: " . $e->getMessage());
-        exit('Login failed. Please try again later.');
     }
 }
 ?>

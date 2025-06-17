@@ -2,11 +2,11 @@
 // File: config/config.php
 
 // App Metadata
-define('APP_NAME', 'MySecureApp');
-define('SUPPORT_EMAIL', 'support@yourdomain.com');
+define('APP_NAME', 'Zentra');
+define('SUPPORT_EMAIL', 'support@app.livewd.ca');
 
 // Base Domain URL - strict validation domain
-$allowed_domain = 'yourdomain.com';
+$allowed_domain = 'app.livewd.ca';
 $current_domain = $_SERVER['HTTP_HOST'] ?? '';
 
 if (stripos($current_domain, $allowed_domain) === false) {
