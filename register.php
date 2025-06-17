@@ -129,12 +129,8 @@ $csrfToken = generateCsrfToken();
     <link rel="stylesheet" href="assets/css/demo_1/style.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
-     <script src="https://www.google.com/recaptcha/api.js"></script>
-     <script>
-   function onSubmit(token) {
-     document.getElementById("forms-register").submit();
-   }
- </script>
+     <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
+
   </head>
   <body class="sidebar-dark">
     <div class="main-wrapper">
@@ -230,6 +226,7 @@ $csrfToken = generateCsrfToken();
                                 <hr />
                         <?php endif; ?>
                       <div class="mt-3">
+                        <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
                         <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white g-recaptcha" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY ?>" data-callback='onSubmit' data-action='submit'>Register</button>
                       </div>
 
@@ -255,9 +252,13 @@ $csrfToken = generateCsrfToken();
     <!-- inject:js -->
     <script src="assets/vendors/feather-icons/feather.min.js"></script>
     <script src="assets/js/template.js"></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <!-- endinject -->
-    <!-- custom js for this page -->
-    <!-- end custom js for this page -->
+    <script>
+grecaptcha.ready(function () {
+    grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', { action: 'register' }).then(function (token) {
+        document.getElementById('recaptchaResponse').value = token;
+    });
+});
+</script>
+
   </body>
 </html>
