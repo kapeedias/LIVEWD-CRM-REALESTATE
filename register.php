@@ -203,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                       <div class="form-group">
                         <label for="jobTitle">Job Title</label>
-                        <div class="g-recaptcha" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></div>
+                        <div class="g-recaptcha" name ="g-recaptcha-response" id = "g-recaptcha-response" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></div>
                         <input type="text" class="form-control" id="jobTitle" name="job_title">
                       </div>
 
