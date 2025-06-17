@@ -95,6 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           class="img-responsive-brand text-center">
                       </a>
                       <hr />
+                      Members Registration
+                      <hr />
                       <form class="forms-sample">
                           <div class="form-group">
                           <label for="firstName">First Name</label>
