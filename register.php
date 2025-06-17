@@ -211,9 +211,7 @@ $csrfToken = generateCsrfToken();
                       </div>
 
                       <div class="form-group">
-                        <label for="jobTitle">Job Title</label>
-                       <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
-                        <div class="g-recaptcha" name ="g-recaptcha-response" id = "g-recaptcha-response" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></div>
+                        <label for="jobTitle">Job Title</label>                                             
                         <input type="text" class="form-control" id="jobTitle" name="job_title">
                       </div>
 
