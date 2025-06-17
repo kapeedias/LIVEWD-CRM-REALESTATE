@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $country, $ip
                 ]);
 
-                echo "<p style='color:green;'>✅ Registration successful. You can now <a href='login.php'>login</a>.</p>";
+                $success = "<p style='color:green;'>✅ Registration successful. You can now <a href='login.php'>login</a>.</p>";
             } catch (PDOException $e) {
                 $error = "Registration failed: " . $e->getMessage();
             }
