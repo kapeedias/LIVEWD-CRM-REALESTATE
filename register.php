@@ -106,12 +106,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       Members Registration
                       <hr />
                        <?php if ($error): ?>
-                          <p style="color:red;"><?= htmlspecialchars($error) ?></p>
-                      <?php endif; ?>
+                                <p style="color:red;"><?= htmlspecialchars($error) ?></p>
+                                <hr />
+                            <?php endif; ?>
 
-                      <?php if ($success): ?>
-                          <p style="color:green;"><?= $success ?></p>
-                      <?php endif; ?>
+                            <?php if ($success): ?>
+                                <p style="color:green;"><?= $success ?></p>
+                                <hr />
+                        <?php endif; ?>
                      <form class="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
                       <div class="form-group">
                         <label for="firstName">First Name</label>
@@ -170,10 +172,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       </div>
                         <?php if ($error): ?>
                                 <p style="color:red;"><?= htmlspecialchars($error) ?></p>
+                                <hr />
                             <?php endif; ?>
 
                             <?php if ($success): ?>
                                 <p style="color:green;"><?= $success ?></p>
+                                <hr />
                         <?php endif; ?>
                       <div class="mt-3">
                         <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Register</button>
