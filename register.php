@@ -246,6 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- inject:js -->
     <script src="assets/vendors/feather-icons/feather.min.js"></script>
     <script src="assets/js/template.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <!-- endinject -->
     <!-- custom js for this page -->
     <!-- end custom js for this page -->
