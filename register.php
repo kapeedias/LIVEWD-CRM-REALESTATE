@@ -164,7 +164,7 @@ $csrfToken = generateCsrfToken();
                                 <hr />
                         <?php endif; ?>
                      <form class="forms-register" id="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
-                      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
+                      <input type="hidden" name="csrf_token" value="<?= $csrf_token; ?>">
                       <div class="form-group">
                         <label for="firstName">First Name</label>
                         <input type="text" class="form-control" id="firstName" name="first_name" required>
