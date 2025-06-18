@@ -130,7 +130,7 @@ $csrfToken = generateCsrfToken();
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
      <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
- <script>
+    <script>
       grecaptcha.ready(function () {
           grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', { action: 'register' }).then(function (token) {
               document.getElementById('recaptchaResponse').value = token;
