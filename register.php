@@ -129,16 +129,7 @@ $csrfToken = generateCsrfToken();
     <link rel="stylesheet" href="assets/css/demo_1/style.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
-     <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
- <script>
-      grecaptcha.ready(function () {
-          grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', { action: 'register' }).then(function (token) {
-              document.getElementById('recaptchaResponse').value = token;
-          });
-      });
-    </script>
-
-  </head>
+</head>
   <body class="sidebar-dark">
     <div class="main-wrapper">
       <div class="page-wrapper full-page">
@@ -167,7 +158,6 @@ $csrfToken = generateCsrfToken();
                                 <hr />
                         <?php endif; ?>
                      <form class="forms-register" id="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
-                      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken); ?>">
                       <div class="form-group">
                         <label for="firstName">First Name</label>
                         <input type="text" class="form-control" id="firstName" name="first_name" required>
@@ -233,8 +223,8 @@ $csrfToken = generateCsrfToken();
                                 <hr />
                         <?php endif; ?>
                       <div class="mt-3">
-                        <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
-                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white g-recaptcha" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY ?>" data-callback='onSubmit' data-action='submit'>Register</button>
+
+                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Register</button>
                       </div>
 
                       <a href="login.php" class="d-block mt-3 text-right text-muted">Login</a>
