@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("INSERT INTO general_info_users (
                 first_name, middle_name, last_name, user_email, user_name,
                 pwd, tel, city, zipcode, province, job_title,
-                country, user_ip, activation_code, ckey, ctime, email_verify, date_created, user_level, approved
+                country, users_ip, activation_code, ckey, ctime, email_verify, date_created, user_level, approved
             ) VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, 1
             )");
