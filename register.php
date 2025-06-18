@@ -5,6 +5,8 @@ require_once __DIR__ . '/config/db.php';
 
 $pdo = Database::getInstance();
 global $csrfToken;
+
+// CSRF token generation and verification
 function generateCsrfToken() {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -18,10 +20,9 @@ function verifyCsrfToken($token) {
 
 $error = '';
 $success = '';
-$csrfToken = generateCsrfToken();  
+$csrfToken = generateCsrfToken();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF token check
     if (!isset($_POST['csrf_token']) || !verifyCsrfToken($_POST['csrf_token'])) {
         die('Invalid CSRF token');
     }
@@ -32,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die('reCAPTCHA verification failed: no token received.');
     }
 
-    $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY; // from config.php
+    $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;
     $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
     $response = file_get_contents($verifyUrl . '?secret=' . urlencode($recaptchaSecret) . '&response=' . urlencode($recaptchaResponse));
     $responseData = json_decode($response, true);
@@ -59,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($error)) {
-        // Check if user with email already exists
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
         $stmt->execute([$email]);
         if ($stmt->fetchColumn() > 0) {
@@ -68,9 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($error)) {
-        // Generate password if empty
         if (empty($password)) {
-            $password = generatePassword();
+            $password = bin2hex(random_bytes(6));
         }
 
         $hashedPwd = password_hash($password, PASSWORD_DEFAULT);
@@ -96,159 +95,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             $success = "✅ Registration successful.";
-            // Optional: email user their password or activation link here
         } catch (PDOException $e) {
             $error = "Registration failed: " . $e->getMessage();
         }
     }
 }
 
-// Generate fresh CSRF token for form
 $csrfToken = generateCsrfToken();
-
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title><?= APP_NAME ?> - Register</title>
-    <!-- core:css -->
-    <link rel="stylesheet" href="assets/vendors/core/core.css">
-    <!-- endinject -->
-    <!-- plugin css for this page -->
-    <!-- end plugin css for this page -->
-    <!-- inject:css -->
-    <link rel="stylesheet" href="assets/fonts/feather-font/css/iconfont.css">
-    <link rel="stylesheet"
-      href="assets/vendors/flag-icon-css/css/flag-icon.min.css">
-    <!-- endinject -->
-    <!-- Layout styles -->
-    <link rel="stylesheet" href="assets/css/demo_1/style.css">
-    <!-- End layout styles -->
-    <link rel="shortcut icon" href="assets/images/favicon.png" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= APP_NAME ?> - Register</title>
+  <link rel="stylesheet" href="assets/vendors/core/core.css">
+  <link rel="stylesheet" href="assets/fonts/feather-font/css/iconfont.css">
+  <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icon.min.css">
+  <link rel="stylesheet" href="assets/css/demo_1/style.css">
+  <link rel="shortcut icon" href="assets/images/favicon.png" />
 </head>
-  <body class="sidebar-dark">
-    <div class="main-wrapper">
-      <div class="page-wrapper full-page">
-        <div
-          class="page-content d-flex align-items-center justify-content-center">
-          <div class="row w-100 mx-0 auth-page">
-            <div class="col-lg-4 mx-auto">
-              <div class="card">
-                <div class="row">
-                  <div class="col">
-                    <div class="auth-form-wrapper px-4 py-5">
-                      <a href="#" class="sidebar-brand">
-                        <img src="assets/images/zentra-logo-dark.png"
-                          class="img-responsive-brand text-center">
-                      </a>
-                      <hr />
-                      Members Registration
-                      <hr />
-                       <?php if ($error): ?>
-                                <p style="color:red;"><?= htmlspecialchars($error) ?></p>
-                                <hr />
-                            <?php endif; ?>
+<body class="sidebar-dark">
+  <div class="main-wrapper">
+    <div class="page-wrapper full-page">
+      <div class="page-content d-flex align-items-center justify-content-center">
+        <div class="row w-100 mx-0 auth-page">
+          <div class="col-lg-4 mx-auto">
+            <div class="card">
+              <div class="auth-form-wrapper px-4 py-5">
+                <a href="#" class="sidebar-brand">
+                  <img src="assets/images/zentra-logo-dark.png" class="img-responsive-brand text-center">
+                </a>
+                <hr />
+                Members Registration
+                <hr />
+                <?php if ($error): ?>
+                  <p style="color:red;"><?= htmlspecialchars($error) ?></p><hr />
+                <?php endif; ?>
+                <?php if ($success): ?>
+                  <p style="color:green;"><?= $success ?></p><hr />
+                <?php endif; ?>
 
-                            <?php if ($success): ?>
-                                <p style="color:green;"><?= $success ?></p>
-                                <hr />
-                        <?php endif; ?>
-                     <form class="forms-register" id="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
-                      <div class="form-group">
-                        <label for="firstName">First Name</label>
-                        <input type="text" class="form-control" id="firstName" name="first_name" required>
-                      </div>
+                <form id="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
+                  <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                  <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
 
-                      <div class="form-group">
-                        <label for="middleName">Middle Name</label>
-                        <input type="text" class="form-control" id="middleName" name="middle_name">
-                      </div>
-
-                      <div class="form-group">
-                        <label for="lastName">Last Name</label>
-                        <input type="text" class="form-control" id="lastName" name="last_name" required>
-                      </div>
-
-                      <div class="form-group">
-                        <label for="InputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="InputEmail1" name="email" placeholder="Email" required>
-                      </div>
-
-                      <div class="form-group">
-                        <label for="tel">Phone (format: 123.456.7890)</label>
-                        <input type="tel" pattern="\d{3}\.\d{3}\.\d{4}" class="form-control" id="tel" name="tel" placeholder="123.456.7890" required>
-                      </div>
-
-                      <div class="form-group">
-                        <label for="city">City</label>
-                        <input type="text" class="form-control" id="city" name="city" required>
-                      </div>
-
-                      <div class="form-group">
-                        <label for="zipcode">Zipcode</label>
-                        <input type="text" class="form-control" id="zipcode" name="zipcode" required>
-                      </div>
-
-                      <div class="form-group">
-                        <label for="province">Province</label>
-                        <input type="text" class="form-control" id="province" name="province" required>
-                      </div>
-
-                      <div class="form-group">
-                        <label for="country">Country</label>
-                        <input type="text" class="form-control" id="country" name="country" value="Canada" required>
-                      </div>
-
-                      <div class="form-group">
-                        <label for="jobTitle">Job Title</label>                                             
-                        <input type="text" class="form-control" id="jobTitle" name="job_title">
-                      </div>
-
-                      <div class="form-group">
-                        <label for="password">Password (optional)</label>
-                        <input type="password" class="form-control" id="password" name="password">
-                        <small class="form-text text-muted">Leave blank to auto-generate a strong password.</small>
-                      </div>
-                        <?php if ($error): ?>
-                                <p style="color:red;"><?= htmlspecialchars($error) ?></p>
-                                <hr />
-                            <?php endif; ?>
-
-                            <?php if ($success): ?>
-                                <p style="color:green;"><?= $success ?></p>
-                                <hr />
-                        <?php endif; ?>
-                      <div class="mt-3">
-
-                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Register</button>
-                      </div>
-
-                      <a href="login.php" class="d-block mt-3 text-right text-muted">Login</a>
-                    </form>
-
-                    </div>
+                  <div class="form-group"><label>First Name</label><input type="text" name="first_name" class="form-control" required></div>
+                  <div class="form-group"><label>Middle Name</label><input type="text" name="middle_name" class="form-control"></div>
+                  <div class="form-group"><label>Last Name</label><input type="text" name="last_name" class="form-control" required></div>
+                  <div class="form-group"><label>Email address</label><input type="email" name="email" class="form-control" required></div>
+                  <div class="form-group"><label>Phone (format: 123.456.7890)</label><input type="tel" name="tel" pattern="\d{3}\.\d{3}\.\d{4}" class="form-control" placeholder="123.456.7890" required></div>
+                  <div class="form-group"><label>City</label><input type="text" name="city" class="form-control" required></div>
+                  <div class="form-group"><label>Zipcode</label><input type="text" name="zipcode" class="form-control" required></div>
+                  <div class="form-group"><label>Province</label><input type="text" name="province" class="form-control" required></div>
+                  <div class="form-group"><label>Country</label><input type="text" name="country" class="form-control" value="Canada" required></div>
+                  <div class="form-group"><label>Job Title</label><input type="text" name="job_title" class="form-control"></div>
+                  <div class="form-group">
+                    <label>Password (optional)</label>
+                    <input type="password" name="password" class="form-control">
+                    <small class="form-text text-muted">Leave blank to auto-generate a strong password.</small>
                   </div>
-                </div>
+                  <div class="mt-3">
+                    <button type="submit" class="btn btn-primary text-white">Register</button>
+                  </div>
+                  <a href="login.php" class="d-block mt-3 text-right text-muted">Login</a>
+                </form>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- core:js -->
-    <script src="assets/vendors/core/core.js"></script>
-    <!-- endinject -->
-    <!-- plugin js for this page -->
-    <!-- end plugin js for this page -->
-    <!-- inject:js -->
-    <script src="assets/vendors/feather-icons/feather.min.js"></script>
-    <script src="assets/js/template.js"></script>
-   
-  </body>
+  <!-- JS includes -->
+  <script src="assets/vendors/core/core.js"></script>
+  <script src="assets/vendors/feather-icons/feather.min.js"></script>
+  <script src="assets/js/template.js"></script>
+
+  <!-- Google reCAPTCHA v3 -->
+  <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
+  <script>
+    grecaptcha.ready(function() {
+      grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', {action: 'register'}).then(function(token) {
+        document.getElementById('recaptchaResponse').value = token;
+      });
+    });
+  </script>
+</body>
 </html>
