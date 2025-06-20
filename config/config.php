@@ -101,6 +101,42 @@ function validatePasswordComplexity($password) {
     return true;
 }
 
-function generatePassword($length = 12) {
-    return bin2hex(random_bytes($length/2));
+function generatePassword(int $length = 21, string $complexity = 'strong', string $customChars = ''): string {
+    $charSets = [
+        'lowercase' => 'abcdefghijklmnopqrstuvwxyz',
+        'uppercase' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        'digits'    => '0123456789',
+        'symbols'   => '!@#$%^&*()-_=+[]{}<>?/|~',
+    ];
+
+    // Define complexity options
+    switch ($complexity) {
+        case 'low':
+            $chars = $charSets['lowercase'];
+            break;
+        case 'medium':
+            $chars = $charSets['lowercase'] . $charSets['digits'];
+            break;
+        case 'high':
+            $chars = $charSets['lowercase'] . $charSets['uppercase'] . $charSets['digits'];
+            break;
+        case 'strong':
+        default:
+            $chars = implode('', $charSets);
+            break;
+    }
+
+    // Override with custom characters if provided
+    if (!empty($customChars)) {
+        $chars = $customChars;
+    }
+
+    // Shuffle and build password
+    $password = '';
+    $max = strlen($chars) - 1;
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $chars[random_int(0, $max)];
+    }
+
+    return $password;
 }
