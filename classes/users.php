@@ -55,6 +55,7 @@ class User {
             $exists->execute([$data['user_email']]);
             if ($exists->fetchColumn() > 0) {
                 $error[] = "The email address '{$data['user_email']}' is already registered.";
+                exit();
             }
 
 
