@@ -32,16 +32,16 @@ define('RESET_URL', SITE_URL . 'reset_password.php');
 
 // Email settings
 define('EMAIL_FROM', 'no-reply@' . $allowed_domain);
-define('EMAIL_FROM_NAME', 'MySecureApp Support');
+define('EMAIL_FROM_NAME', 'Zentra - Registration');
 define('SMTP_HOST', 'smtp.' . $allowed_domain);
 define('SMTP_PORT', 587);
 define('SMTP_USER', 'your-smtp-username');
-define('SMTP_PASS', 'your-smtp-password');
+define('SMTP_PASS', 'hOv3+haqiTOh4tRay!fa');
 
 // SendGrid settings
 define('SENDGRID_API_KEY', 'your-sendgrid-api-key');
 define('SENDGRID_SENDER_EMAIL', 'no-reply@' . $allowed_domain);
-define('SENDGRID_SENDER_NAME', 'MySecureApp');
+define('SENDGRID_SENDER_NAME', 'Zentra');
 
 // Twilio SMS/WhatsApp settings
 define('TWILIO_ACCOUNT_SID', 'your-twilio-account-sid');
