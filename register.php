@@ -15,7 +15,7 @@ try {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Generate a secure 8-character password (hex)
-    $generatedPassword = bin2hex(random_bytes(4));
+   // $generatedPassword = bin2hex(random_bytes(4));
 
     // Prepare data with minimal inputs and required defaults
     $formData = [
