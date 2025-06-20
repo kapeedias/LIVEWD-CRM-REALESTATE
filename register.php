@@ -13,14 +13,13 @@ try {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Generate a secure 8-character password (hex)
-   // $generatedPassword = bin2hex(random_bytes(4));
+    $pwd = generatePassword();
 
     // Prepare data with minimal inputs and required defaults
     $formData = [
         'first_name' => $_POST['first_name'] ?? '',
         'last_name'  => $_POST['last_name'] ?? '',
         'user_email' => $_POST['user_email'] ?? '',
-        'pwd'        => $generatedPassword,
         'user_name'  => $_POST['user_email'] ?? '',
         'users_ip'   => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
         'date_created' => date('Y-m-d'),
@@ -31,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $user->register($formData);
-        $success[]= "<p>Registration successful! Your password is: <strong>$generatedPassword</strong></p>";
+        $success[]= "<p>Registration successful! An email has been sent with the login credentials.</p>";
     } catch (Exception $e) {
         $error[]="<p>Registration failed: " . $e->getMessage() . "</p>";
     }
