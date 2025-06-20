@@ -10,7 +10,7 @@ class User {
         session_start();
     }
 
-   private function logActivity($userId, $user_email, $action, array $context = []){
+   private function logActivity($userId, $identifier, $action, array $context = []){
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $datetime = gmdate('Y-m-d H:i:s');
         $activity_text = '';
@@ -18,7 +18,7 @@ class User {
         switch (strtolower($action)) {
             case 'registered':
                 $activity_text = sprintf(
-                    'A new user registered with user_id'.$userId.' and email "%s" at %s UTC from IP %s.',
+                    'A new user registered with user_id'.$userId.' and user_email '. $identifier .' at datetime UTC from IP'.$ip,
                     $context['user_name'] ?? 'unknown',
                     $context['user_email'] ?? 'unknown',
                     $datetime,
@@ -28,7 +28,7 @@ class User {
 
             case 'logged in':
                 $activity_text = sprintf(
-                    'User logged in using "%s" at %s UTC from IP %s.',
+                    'User logged in using "%s" at datetime UTC from IP'.$ip,
                     $context['username'] ?? 'unknown',
                     $datetime,
                     $ip
@@ -37,7 +37,7 @@ class User {
 
             case 'password reset':
                 $activity_text = sprintf(
-                    'User reset their password at %s UTC from IP %s.',
+                    'User reset their password at datetime UTC from IP'.$ip,
                     $datetime,
                     $ip
                 );
@@ -45,14 +45,14 @@ class User {
 
             case 'updated profile':
                 $activity_text = sprintf(
-                    'User updated their profile at %s UTC from IP %s.',
+                    'User updated their profile at datetime UTC from IP'.$ip,
                     $datetime,
                     $ip
                 );
                 break;
 
             default:
-                $activity_text = sprintf('%s at %s UTC from IP %s.', ucfirst($action), $datetime, $ip);
+                $activity_text = sprintf('%s at datetime UTC from IP'.$ip, ucfirst($action), $datetime, $ip);
                 break;
         }
 
