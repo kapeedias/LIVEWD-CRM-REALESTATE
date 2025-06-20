@@ -15,8 +15,17 @@ class User {
     }
 
     public function register($data) {
+        $data['first_name'] = $_POST['first_name'] ?? '';
+        $data['last_name'] = $_POST['last_name'] ?? '';
+        $data['user_email'] = $_POST['user_email'] ?? '';
+        $data['pwd'] = generatePassword(); // plain password before hashing
+        $data['user_name'] = $_POST['user_email'] ?? '';
+        $data['users_ip'] = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+        // Now hash password and generate md5_id
         $data['pwd'] = password_hash($data['pwd'], PASSWORD_BCRYPT);
         $data['md5_id'] = md5(uniqid(mt_rand(), true));
+
         $columns = implode(", ", array_keys($data));
         $placeholders = ":" . implode(", :", array_keys($data));
 

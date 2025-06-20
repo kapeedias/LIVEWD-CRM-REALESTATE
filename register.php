@@ -1,30 +1,36 @@
 <?php
-session_start();
 require_once __DIR__ . '/config/config.php';
-require_once __DIR__ . '/config/db.php';
-require_once __DIR__ . '/classes/users.php';
+require_once __DIR__ . '/config/db.php';        // Your Database class file
+require_once __DIR__ . '/classes/users.php';    // Your User class file
 
-$user = new User($pdo); 
-
+try {
+    $pdo = Database::getInstance();
+    $user = new User($pdo);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Generate a secure 8-character password (hex)
+    $generatedPassword = bin2hex(random_bytes(4));
+
+    // Prepare data with minimal inputs and required defaults
     $formData = [
-        'md5_id' => '', // generated in class
-        'first_name' => $_POST['first_name'],
-        'last_name' => $_POST['last_name'],
-        'user_name' => $_POST['user_name'],
-        'user_email' => $_POST['user_email'],
-        'users_ip' => $_SERVER['REMOTE_ADDR'],
+        'first_name' => $_POST['first_name'] ?? '',
+        'last_name'  => $_POST['last_name'] ?? '',
+        'user_email' => $_POST['user_email'] ?? '',
+        'pwd'        => $generatedPassword,
+        'user_name'  => $_POST['user_email'] ?? '',
+        'users_ip'   => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
     ];
 
     try {
         $user->register($formData);
-        $success= "<p>Registration successful!</p>";
+        echo "<p>Registration successful! Your password is: <strong>$generatedPassword</strong></p>";
     } catch (Exception $e) {
-        echo "Error: ". $e->getMessage();
+        echo "<p>Registration failed: " . $e->getMessage() . "</p>";
     }
 }
-
 ?>
 
 <!DOCTYPE html>
