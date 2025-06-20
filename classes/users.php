@@ -10,73 +10,45 @@ class User {
         session_start();
     }
 
-   private function logActivity($userId, $identifier, $action, array $context = []){
-        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $datetime = gmdate('Y-m-d H:i:s');
-        $activity_text = '';
+  private function logActivity($userId, string $identifier, string $action, array $context = []): void
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $sessionId = session_id();
+    $timestamp = gmdate('Y-m-d H:i:s');
 
-        switch (strtolower($action)) {
-            case 'registered':
-                $activity_text = sprintf(
-                    'A new user registered with user_id'.$userId.' and user_email '. $identifier .' at datetime UTC from IP'.$ip,
-                    $context['user_name'] ?? 'unknown',
-                    $context['user_email'] ?? 'unknown',
-                    $datetime,
-                    $ip
-                );
-                break;
+    // Compose dynamic activity text
+    $activity_text = "{$identifier} at {$timestamp} UTC from IP {$ip}";
 
-            case 'logged in':
-                $activity_text = sprintf(
-                    'User logged in using "%s" at datetime UTC from IP'.$ip,
-                    $context['username'] ?? 'unknown',
-                    $datetime,
-                    $ip
-                );
-                break;
+    // Prepare insert statement
+    $stmt = $this->pdo->prepare("
+        INSERT INTO {$this->activityTable} 
+        (user_id, action, field_changed, old_value, new_value, created_at, session_id, activity_text) 
+        VALUES (:user_id, :action, :field_changed, :old_value, :new_value, :created_at, :session_id, :activity_text)
+    ");
 
-            case 'password reset':
-                $activity_text = sprintf(
-                    'User reset their password at datetime UTC from IP'.$ip,
-                    $datetime,
-                    $ip
-                );
-                break;
+    $stmt->execute([
+        'user_id'       => $userId,
+        'action'        => ucfirst($action),
+        'field_changed' => $context['field_changed'] ?? null,
+        'old_value'     => $context['old_value'] ?? null,
+        'new_value'     => $context['new_value'] ?? null,
+        'created_at'    => $timestamp,
+        'session_id'    => $sessionId,
+        'activity_text' => $activity_text
+    ]);
+}
+   
 
-            case 'updated profile':
-                $activity_text = sprintf(
-                    'User updated their profile at datetime UTC from IP'.$ip,
-                    $datetime,
-                    $ip
-                );
-                break;
-
-            default:
-                $activity_text = sprintf('%s at datetime UTC from IP'.$ip, ucfirst($action), $datetime, $ip);
-                break;
-        }
-
-        $stmt = $this->pdo->prepare("INSERT INTO {$this->activityTable}
-            (user_id, action, activity_text, session_id, created_at) 
-            VALUES (?, ?, ?, ?, NOW())
-        ");
-        $stmt->execute([$userId, ucfirst($action), $activity_text, session_id()]);
-    }
-    
-
-    public function register($data) {
+   public function register($data) {
+        $plainPassword = generatePassword(); // plain password to show if needed
         $data['first_name'] = $_POST['first_name'] ?? '';
-        $data['last_name'] = $_POST['last_name'] ?? '';
+        $data['last_name']  = $_POST['last_name'] ?? '';
         $data['user_email'] = $_POST['user_email'] ?? '';
-        $data['pwd'] = generatePassword(); // plain password before hashing
-        $data['user_name'] = $_POST['user_email'] ?? '';
-        $data['users_ip'] = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        $data['date_created'] = Date('Y-m-d H:i:s');
+        $data['pwd']        = password_hash($plainPassword, PASSWORD_BCRYPT);
+        $data['user_name']  = $_POST['user_email'] ?? '';
+        $data['users_ip']   = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $data['date_created'] = date('Y-m-d H:i:s');
         $data['verification_email_sent'] = '0000-00-00 00:00:00';
-        
-
-        // Now hash password and generate md5_id
-        $data['pwd'] = password_hash($data['pwd'], PASSWORD_BCRYPT);
         $data['md5_id'] = md5(uniqid(mt_rand(), true));
 
         $columns = implode(", ", array_keys($data));
@@ -86,8 +58,17 @@ class User {
         $stmt->execute($data);
 
         $userId = $this->pdo->lastInsertId();
-        $this->logActivity($userId, $_POST['user_email'], 'Registered');
-    }
+
+        // Custom descriptive identifier text for the activity log
+        $identifier = "New user registered with email {$data['user_email']} and username {$data['user_name']}";
+
+        // Log with new logActivity method
+        $this->logActivity($userId, $identifier, 'Registered');
+
+        // Optionally return the plain password if needed by the caller
+       // return $plainPassword;
+}
+
 
     public function login($username, $password) {
         $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE user_name = :username OR user_email = :username LIMIT 1");
