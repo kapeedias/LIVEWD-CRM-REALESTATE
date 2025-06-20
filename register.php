@@ -33,9 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $user->register($formData);
-        echo "<p>Registration successful! Your password is: <strong>$generatedPassword</strong></p>";
+        $success[]= "<p>Registration successful! Your password is: <strong>$generatedPassword</strong></p>";
     } catch (Exception $e) {
-        echo "<p>Registration failed: " . $e->getMessage() . "</p>";
+        $error[]="<p>Registration failed: " . $e->getMessage() . "</p>";
     }
 }
 ?>
