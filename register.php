@@ -66,10 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   <p style="color:green;"><?= $success ?></p><hr />
                 <?php endif; ?>
 
-                <form id="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
-                  <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                <form id="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">                  
                   <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
-
                   <div class="form-group"><label>First Name</label><input type="text" name="first_name" class="form-control" required></div>
                   <div class="form-group"><label>Last Name</label><input type="text" name="last_name" class="form-control" required></div>
                   <div class="form-group"><label>Email address</label><input type="email" name="email" class="form-control" required></div>                              

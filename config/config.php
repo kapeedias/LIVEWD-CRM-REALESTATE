@@ -8,6 +8,8 @@ define('SUPPORT_EMAIL', 'support@app.livewd.ca');
 // Base Domain URL - strict validation domain
 $allowed_domain = 'app.livewd.ca';
 $current_domain = $_SERVER['HTTP_HOST'] ?? '';
+$error = '';
+$success = '';
 
 if (stripos($current_domain, $allowed_domain) === false) {
     header('HTTP/1.1 403 Forbidden');
