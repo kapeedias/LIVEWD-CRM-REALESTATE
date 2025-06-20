@@ -52,10 +52,9 @@ class User {
 
             // Check for duplicate email
             $exists = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->userTable} WHERE user_email = ?");
-            $exists->execute([$data['user_email']]);
+            $exists->execute([$_POST['user_email']]);
             if ($exists->fetchColumn() > 0) {
-                $error[] = "The email address '{$data['user_email']}' is already registered.";
-                exit();
+                $error[] = "The email address '{$data['user_email']}' is already registered.";                
             }
 
 
