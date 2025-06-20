@@ -50,6 +50,14 @@ class User {
         $data['verification_email_sent'] = '0000-00-00 00:00:00';
         $data['md5_id'] = md5(uniqid(mt_rand(), true));
 
+            // Check for duplicate email
+            $exists = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->userTable} WHERE user_email = ?");
+            $exists->execute([$data['user_email']]);
+            if ($exists->fetchColumn() > 0) {
+                $error[] = "The email address '{$data['user_email']}' is already registered.";
+            }
+
+
         $columns = implode(", ", array_keys($data));
         $placeholders = ":" . implode(", :", array_keys($data));
 

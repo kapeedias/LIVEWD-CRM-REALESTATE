@@ -1,4 +1,18 @@
 <?php
+
+// Turn off displaying errors to users
+ini_set('display_errors', 0);
+
+// Enable logging
+ini_set('log_errors', 1);
+
+// Set custom log file in the current directory
+ini_set('error_log', __DIR__ . '/Zentra_Error_log');
+
+// Optionally set error reporting level (log everything)
+error_reporting(E_ALL);
+
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
