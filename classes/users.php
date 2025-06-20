@@ -3,16 +3,66 @@ class User {
     private $pdo;
     private $activityTable = 'general_info_useractivityaudit';
     private $userTable = 'general_info_users';
+    
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
         session_start();
     }
 
-    private function logActivity($userId, $action) {
-        $stmt = $this->pdo->prepare("INSERT INTO {$this->activityTable} (user_id, action, session_id, created_at) VALUES (?, ?, ?, NOW())");
-        $stmt->execute([$userId, $action, session_id()]);
+   private function logActivity($userId, $action, array $context = []){
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $datetime = gmdate('Y-m-d H:i:s');
+        $activity_text = '';
+
+        switch (strtolower($action)) {
+            case 'registered':
+                $activity_text = sprintf(
+                    'A new user registered with username "%s" and email "%s" at %s UTC from IP %s.',
+                    $context['user_name'] ?? 'unknown',
+                    $context['user_email'] ?? 'unknown',
+                    $datetime,
+                    $ip
+                );
+                break;
+
+            case 'logged in':
+                $activity_text = sprintf(
+                    'User logged in using "%s" at %s UTC from IP %s.',
+                    $context['username'] ?? 'unknown',
+                    $datetime,
+                    $ip
+                );
+                break;
+
+            case 'password reset':
+                $activity_text = sprintf(
+                    'User reset their password at %s UTC from IP %s.',
+                    $datetime,
+                    $ip
+                );
+                break;
+
+            case 'updated profile':
+                $activity_text = sprintf(
+                    'User updated their profile at %s UTC from IP %s.',
+                    $datetime,
+                    $ip
+                );
+                break;
+
+            default:
+                $activity_text = sprintf('%s at %s UTC from IP %s.', ucfirst($action), $datetime, $ip);
+                break;
+        }
+
+        $stmt = $this->pdo->prepare("INSERT INTO {$this->activityTable}
+            (user_id, action, activity_text, session_id, created_at) 
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        $stmt->execute([$userId, ucfirst($action), $activity_text, session_id()]);
     }
+    
 
     public function register($data) {
         $data['first_name'] = $_POST['first_name'] ?? '';

@@ -22,6 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'pwd'        => $generatedPassword,
         'user_name'  => $_POST['user_email'] ?? '',
         'users_ip'   => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+        'date_created' => date('Y-m-d'),
+        'email_verify' => "PENDING",
+        'activation_code' => rand(1000000000, 9999999999),
+
     ];
 
     try {
