@@ -66,13 +66,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <hr />
                 Members Registration
                 <hr />
-                <?php if ($error): ?>
-                  <p style="color:red;"><?= htmlspecialchars($error) ?></p><hr />
-                <?php endif; ?>
-                <?php if ($success): ?>
-                  <p style="color:green;"><?= $success ?></p><hr />
+                <?php if (!empty($error)): ?>
+                    <?php foreach ($error as $msg): ?>
+                        <p style="color:red;"><?= $msg ?></p><hr />
+                    <?php endforeach; ?>
                 <?php endif; ?>
 
+                <?php if (!empty($success)): ?>
+                    <?php foreach ($success as $msg): ?>
+                        <p style="color:green;"><?= $msg ?></p><hr />
+                    <?php endforeach; ?>
+                <?php endif; ?>
                 <form id="forms-register" method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">                  
                   <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
                   <div class="form-group"><label>First Name</label><input type="text" name="first_name" class="form-control" required></div>
