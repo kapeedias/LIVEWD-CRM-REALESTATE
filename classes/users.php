@@ -10,7 +10,7 @@ class User {
         session_start();
     }
 
-   private function logActivity($userId, $action, array $context = []){
+   private function logActivity($userId, $user_email, $action, array $context = []){
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $datetime = gmdate('Y-m-d H:i:s');
         $activity_text = '';
@@ -18,7 +18,7 @@ class User {
         switch (strtolower($action)) {
             case 'registered':
                 $activity_text = sprintf(
-                    'A new user registered with username "%s" and email "%s" at %s UTC from IP %s.',
+                    'A new user registered with user_id'.$userId.' and email "%s" at %s UTC from IP %s.',
                     $context['user_name'] ?? 'unknown',
                     $context['user_email'] ?? 'unknown',
                     $datetime,
@@ -83,7 +83,7 @@ class User {
         $stmt->execute($data);
 
         $userId = $this->pdo->lastInsertId();
-        $this->logActivity($userId, 'Registered');
+        $this->logActivity($userId,$data['user_email'], 'Registered');
     }
 
     public function login($username, $password) {
