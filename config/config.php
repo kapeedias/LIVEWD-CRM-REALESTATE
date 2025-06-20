@@ -1,5 +1,6 @@
 <?php
 // File: config/config.php
+date_default_timezone_set('UTC');
 
 // App Metadata
 define('APP_NAME', 'Zentra');
