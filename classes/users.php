@@ -7,7 +7,6 @@ class User {
 
     public function __construct(PDO $pdo) {
         $this->pdo = $pdo;
-        session_start();
     }
 
   private function logActivity($userId, string $identifier, string $action, array $context = []): void
@@ -70,66 +69,104 @@ class User {
 }
 
 
-    public function login($username, $password) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE user_name = :username OR user_email = :username LIMIT 1");
-        $stmt->execute(['username' => $username]);
+   public function login($username, $password) {
+    $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE user_name = :username OR user_email = :username LIMIT 1");
+    $stmt->execute(['username' => $username]);
 
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($user && password_verify($password, $user['pwd'])) {
-            $_SESSION['user'] = $user;
-            $this->logActivity($user['id'], 'Logged In');
-            return true;
-        }
-        return false;
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($user && password_verify($password, $user['pwd'])) {
+        $_SESSION['user'] = $user;
+
+        // Build descriptive identifier text for logging
+        $identifier = "User with ID {$user['id']} logged in using username/email '{$username}' from IP " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+
+        $this->logActivity($user['id'], $identifier, 'Logged In');
+        return true;
     }
+    return false;
+}
+
 
     public function forgotPassword($email) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE user_email = :email");
-        $stmt->execute(['email' => $email]);
+    $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE user_email = :email");
+    $stmt->execute(['email' => $email]);
 
-        if ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $token = bin2hex(random_bytes(32));
-            $expires = date('Y-m-d H:i:s', time() + 3600);
+    if ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $token = bin2hex(random_bytes(32));
+        $expires = date('Y-m-d H:i:s', time() + 3600);
 
-            $update = $this->pdo->prepare("UPDATE {$this->userTable} SET reset_token = ?, reset_expires = ? WHERE id = ?");
-            $update->execute([$token, $expires, $user['id']]);
+        $update = $this->pdo->prepare("UPDATE {$this->userTable} SET reset_token = ?, reset_expires = ? WHERE id = ?");
+        $update->execute([$token, $expires, $user['id']]);
 
-            $this->logActivity($user['id'], 'Requested Password Reset');
-            return $token;
-        }
-        return false;
+        // Compose identifier for activity log
+        $identifier = "Password reset requested for email {$email} from IP " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+
+        $this->logActivity($user['id'], $identifier, 'Requested Password Reset');
+        return $token;
     }
+    return false;
+}
 
     public function resetPassword($token, $newPassword) {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE reset_token = :token AND reset_expires > NOW()");
-        $stmt->execute(['token' => $token]);
+    $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE reset_token = :token AND reset_expires > NOW()");
+    $stmt->execute(['token' => $token]);
 
-        if ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
-            $update = $this->pdo->prepare("UPDATE {$this->userTable} SET pwd = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
-            $update->execute([$hashed, $user['id']]);
+    if ($user = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
+        $update = $this->pdo->prepare("UPDATE {$this->userTable} SET pwd = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
+        $update->execute([$hashed, $user['id']]);
 
-            $this->logActivity($user['id'], 'Password Reset');
-            return true;
-        }
-        return false;
+        // Create descriptive log identifier with user ID and IP
+        $identifier = "Password reset performed for user ID {$user['id']} from IP " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+
+        $this->logActivity($user['id'], $identifier, 'Password Reset');
+        return true;
     }
+    return false;
+}
+
 
     public function updateProfile($userId, $data) {
-        $setParts = [];
-        foreach ($data as $key => $value) {
-            $setParts[] = "$key = :$key";
-        }
-        $setQuery = implode(", ", $setParts);
+    // Fetch current user data for comparison
+    $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE id = ?");
+    $stmt->execute([$userId]);
+    $currentData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $data['id'] = $userId;
-        $stmt = $this->pdo->prepare("UPDATE {$this->userTable} SET $setQuery WHERE id = :id");
-        $stmt->execute($data);
-
-        $this->logActivity($userId, 'Updated Profile');
+    if (!$currentData) {
+        throw new Exception("User not found");
     }
+
+    $changes = [];
+    foreach ($data as $key => $newValue) {
+        $oldValue = $currentData[$key] ?? null;
+        if ($oldValue != $newValue) {
+            $changes[] = "$key changed from '$oldValue' to '$newValue'";
+        }
+    }
+
+    if (!empty($changes)) {
+        $activityText = "User updated profile: " . implode("; ", $changes);
+    } else {
+        $activityText = "User updated profile but no changes detected";
+    }
+
+    // Prepare update query
+    $setParts = [];
+    foreach ($data as $key => $value) {
+        $setParts[] = "$key = :$key";
+    }
+    $setQuery = implode(", ", $setParts);
+    $data['id'] = $userId;
+
+    $stmt = $this->pdo->prepare("UPDATE {$this->userTable} SET $setQuery WHERE id = :id");
+    $stmt->execute($data);
+
+    $this->logActivity($userId, $activityText, 'Updated Profile');
+}
+
 
     public function track($userId, $action) {
-        $this->logActivity($userId, $action);
-    }
+    $this->logActivity($userId, $action, $action);
+}
+
 }
