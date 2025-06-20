@@ -1,7 +1,7 @@
 <?php
 class User {
     private $pdo;
-    private $activityTable = 'activity';
+    private $activityTable = 'general_info_useractivityaudit';
     private $userTable = 'general_info_users';
 
     public function __construct(PDO $pdo) {
