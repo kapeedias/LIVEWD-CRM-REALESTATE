@@ -158,3 +158,9 @@ function generatePassword(int $length = 21, string $complexity = 'strong', strin
 
     return $password;
 }
+
+function logAppError($exception) {
+    $logFile = __DIR__ . '/Zentra_Error_log';
+    $errorMessage = "[" . date('Y-m-d H:i:s') . "] " . $exception->getMessage() . "\n";
+    file_put_contents($logFile, $errorMessage, FILE_APPEND);
+}
