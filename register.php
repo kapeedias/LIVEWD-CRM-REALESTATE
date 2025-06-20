@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
                   <div class="form-group"><label>First Name</label><input type="text" name="first_name" class="form-control" required></div>
                   <div class="form-group"><label>Last Name</label><input type="text" name="last_name" class="form-control" required></div>
-                  <div class="form-group"><label>Email address</label><input type="email" name="email" class="form-control" required></div>                              
+                  <div class="form-group"><label>Email address</label><input type="email" name="user_email" class="form-control" required></div>                              
                   <div class="mt-3"><button type="submit" class="btn btn-primary text-white">Register</button></div>
                   <a href="login.php" class="d-block mt-3 text-right text-muted">Login Now</a>
                 </form>
