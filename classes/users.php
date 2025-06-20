@@ -71,6 +71,7 @@ class User {
         $data['pwd'] = generatePassword(); // plain password before hashing
         $data['user_name'] = $_POST['user_email'] ?? '';
         $data['users_ip'] = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $data['date_created'] = Date('Y-m-d H:i:s');
 
         // Now hash password and generate md5_id
         $data['pwd'] = password_hash($data['pwd'], PASSWORD_BCRYPT);
