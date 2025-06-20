@@ -86,7 +86,7 @@ class User {
         $stmt->execute($data);
 
         $userId = $this->pdo->lastInsertId();
-        $this->logActivity($userId,$data['user_email'], 'Registered');
+        $this->logActivity($userId, $_POST['user_email'], 'Registered');
     }
 
     public function login($username, $password) {
