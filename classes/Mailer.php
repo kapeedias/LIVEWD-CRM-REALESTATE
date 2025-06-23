@@ -4,7 +4,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . 'vendor/autoload.php'; // adjust path as needed
+require_once __DIR__ . '/vendor/autoload.php'; // adjust path as needed
 
 class Mailer {
     private $mail;
