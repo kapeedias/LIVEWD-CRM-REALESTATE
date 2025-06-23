@@ -30,10 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
    try {
           $user->register($formData);
-          $success[] = "<p>Registration successful! An email has been sent with the login credentials.</p>";
+          $success[] = "Registration successful! An email has been sent with the login credentials.";
       } catch (Exception $e) {
           logAppError($e); // Log actual error
-          $error[] = "<p>Registration failed. Please try again later or contact support.</p>"; // Generic message to user
+          $error[] = "Registration failed. Please try again later or contact support."; // Generic message to user
       }
 
 }
