@@ -55,8 +55,6 @@ define('SMTP_PORT', 587);
 define('EMAIL_FROM', 'no-reply@livewd.ca');
 define('EMAIL_FROM_NAME', 'Zentra');
 
-
-
 // Twilio SMS/WhatsApp settings
 define('TWILIO_ACCOUNT_SID', 'your-twilio-account-sid');
 define('TWILIO_AUTH_TOKEN', 'your-twilio-auth-token');
