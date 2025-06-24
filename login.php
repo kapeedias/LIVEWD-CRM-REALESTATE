@@ -14,10 +14,50 @@ try {
 }
 
 $error = '';
+// === RATE LIMITING CONFIG ===
+$ip = $_SERVER['REMOTE_ADDR'];
+$maxAttempts = 5;
+$lockoutTime = 15 * 60; // 15 minutes
+
+if (!isset($_SESSION['login_attempts'])) {
+    $_SESSION['login_attempts'] = [];
+}
+
+// Remove old attempts outside the lockout window
+foreach ($_SESSION['login_attempts'] as $time => $recordedIp) {
+    if (time() - $time > $lockoutTime) {
+        unset($_SESSION['login_attempts'][$time]);
+    }
+}
+
+// Count recent attempts from this IP
+$attempts = array_filter($_SESSION['login_attempts'], fn($v) => $v === $ip);
+
+if (count($attempts) >= $maxAttempts) {
+    $error='Too many login attempts. Please wait before trying again.';
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['useremail'] ?? '');
     $password = trim($_POST['userpassword'] ?? '');
+
+    // === reCAPTCHA verification ===
+    $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;  // Replace with your secret key
+    $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+
+    if (empty($recaptchaResponse)) {
+        $error ='Please complete the reCAPTCHA.';
+        exit;
+    }
+
+    $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecret}&response={$recaptchaResponse}");
+    $captchaResult = json_decode($verify);
+
+    if (!$captchaResult->success) {
+        $error ='reCAPTCHA verification failed. Please try again.';
+        exit;
+    }
 
     // Validate email
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -135,14 +175,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <!-- core:js -->
     <script src="assets/vendors/core/core.js"></script>
-    <!-- endinject -->
-    <!-- plugin js for this page -->
-    <!-- end plugin js for this page -->
-    <!-- inject:js -->
+   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="assets/vendors/feather-icons/feather.min.js"></script>
     <script src="assets/js/template.js"></script>
-    <!-- endinject -->
-    <!-- custom js for this page -->
-    <!-- end custom js for this page -->
   </body>
 </html>
