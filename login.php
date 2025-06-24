@@ -6,6 +6,13 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
 require_once __DIR__ . '/classes/User.php';
 
+try {
+    $pdo = Database::getInstance();
+    $user = new User($pdo);
+} catch (PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
 $userObj = new User($pdo);
 $error = '';
 $maxAttempts = 5;
