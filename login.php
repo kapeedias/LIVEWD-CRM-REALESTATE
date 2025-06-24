@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['userpassword'] ?? '');
 
     // === reCAPTCHA verification ===
-    $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;  // Replace with your secret key
+    $recaptchaSecret = '6LfApmsrAAAAADLc6Gg38GfcZenY3XCSfgjKdaOW';  // Replace with your secret key
     $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
     if (empty($recaptchaResponse)) {
@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           </label>
                         </div>
                         <div class="mt-3">
-                          <div class="g-recaptcha" data-sitekey="<? GOOGLE_RECAPTCHA_SITE_KEY ?>"></div>
+                          <div class="g-recaptcha" data-sitekey="6LfApmsrAAAAAKYYa1iy44IfsO7hp31gPrZh2jvu"></div>
                           <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
                           <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Login</button>
