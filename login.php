@@ -19,7 +19,7 @@ $maxAttempts = 5;
 $lockoutTime = 15; // minutes
 
 $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-
+/*
 function tooManyAttempts(PDO $pdo, string $ip, int $maxAttempts, int $lockoutTime): bool {
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM login_attempts WHERE ip_address = ? AND attempt_time > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
     $stmt->execute([$ip, $lockoutTime]);
@@ -30,16 +30,18 @@ function logAttempt(PDO $pdo, string $ip, string $email): void {
     $stmt = $pdo->prepare("INSERT INTO login_attempts (ip_address, email, attempt_time) VALUES (?, ?, NOW())");
     $stmt->execute([$ip, $email]);
 }
-
+*/
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $emailOrUsername = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-
-    if (!filter_var($emailOrUsername, FILTER_VALIDATE_EMAIL) && empty($emailOrUsername)) {
-        $error = 'Please enter a valid email or username.';
-    } elseif (tooManyAttempts($pdo, $ip, $maxAttempts, $lockoutTime)) {
-        $error = "Too many failed attempts. Try again in {$lockoutTime} minutes.";
-    } else {
+  $message="test";
+   // if (!filter_var($emailOrUsername, FILTER_VALIDATE_EMAIL) && empty($emailOrUsername)) {
+//$error = 'Please enter a valid email or username.';
+  //  } /*elseif (tooManyAttempts($pdo, $ip, $maxAttempts, $lockoutTime)) {
+       // $error = "Too many failed attempts. Try again in {$lockoutTime} minutes.";
+    
+      //} //else {
+      /*
         try {
             // Check if user exists and is allowed to login
             $stmt = $pdo->prepare("SELECT id, first_name, approved, banned FROM general_info_users WHERE user_email = ? OR user_name = ?");
@@ -70,9 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (PDOException $e) {
             error_log("LOGIN ERROR: " . $e->getMessage());
             $error = 'Login failed. Please try again later.';
-        }
-    }
-}
+        }*/
+    //}
+
+
+  //}
 ?>
 
 <!DOCTYPE html>
