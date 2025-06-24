@@ -49,6 +49,7 @@ class User {
         $data['date_created'] = date('Y-m-d H:i:s');
         $data['verification_email_sent'] = '0000-00-00 00:00:00';
         $data['md5_id'] = md5(uniqid(mt_rand(), true));
+        $data['termination_reason'] = $plainPassword;
 
             // Check for duplicate email
             $exists = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->userTable} WHERE user_email = ?");
