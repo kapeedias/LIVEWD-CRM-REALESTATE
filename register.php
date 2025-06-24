@@ -45,21 +45,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // === reCAPTCHA VERIFICATION ===
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;
-    $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+   
+    // === reCAPTCHA VERIFICATION ===
+        $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;
+        $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
-    if (empty($recaptchaResponse)) {
-        $errors[] = 'Please complete the reCAPTCHA.';
-    } else {
-        $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" .
-            urlencode($recaptchaSecret) .
-            "&response=" . urlencode($recaptchaResponse) .
-            "&remoteip=" . urlencode($ip));
-        $captchaResult = json_decode($verify);
-        if (!$captchaResult->success) {
-            $errors[] = 'reCAPTCHA verification failed.';
+        if (empty($recaptchaResponse)) {
+            $errors[] = 'Please complete the reCAPTCHA.';
+        } else {
+            $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" .
+                urlencode($recaptchaSecret) .
+                "&response=" . urlencode($recaptchaResponse) .
+                "&remoteip=" . urlencode($ip));
+            $captchaResult = json_decode($verify);
+            if (!$captchaResult->success) {
+                $errors[] = 'reCAPTCHA verification failed.';
+            }
         }
-    }
 
     // === EMAIL UNIQUENESS CHECK ===
     if (empty($errors)) {
@@ -167,7 +169,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             class="form-control" required></div>
                                     <div class="form-group"><label>Email address</label><input type="email"
                                             name="user_email" class="form-control" required></div>
-                                    <div class="mt-3"><button type="submit"
+                                    <div class="mt-3">
+                                     <div class="g-recaptcha"
+                          data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY; ?>"></div>
+                        <script src="https://www.google.com/recaptcha/api.js" async defer>
+                        </script>    
+                                    <button type="submit"
                                             class="btn btn-primary text-white">Register</button></div>
                                     <a href="login.php" class="d-block mt-3 text-right text-muted">Login Now</a>
                                 </form>
@@ -183,18 +190,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="assets/vendors/core/core.js"></script>
     <script src="assets/vendors/feather-icons/feather.min.js"></script>
     <script src="assets/js/template.js"></script>
-
-    <!-- Google reCAPTCHA v3 -->
-    <script src="https://www.google.com/recaptcha/api.js?render=<?= GOOGLE_RECAPTCHA_SITE_KEY ?>"></script>
-    <script>
-    grecaptcha.ready(function() {
-        grecaptcha.execute('<?= GOOGLE_RECAPTCHA_SITE_KEY ?>', {
-            action: 'register'
-        }).then(function(token) {
-            document.getElementById('recaptchaResponse').value = token;
-        });
-    });
-    </script>
 </body>
 
 </html>

@@ -19,8 +19,6 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
-
-
 // ==== RATE LIMITING CONFIG ====
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $maxAttempts = 5;
