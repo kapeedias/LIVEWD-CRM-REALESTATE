@@ -1,8 +1,8 @@
 <?php
-
 require_once __DIR__ . '/config/config.php';
-require_once __DIR__ . '/config/db.php';        // Your Database class file
-require_once __DIR__ . '/classes/User.php';    // Your User class file
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/config/helpers.php';
+require_once __DIR__ . '/classes/User.php';
 
 try {
     $pdo = Database::getInstance();
@@ -11,32 +11,50 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
+$errors = [];
+$success = [];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Generate a secure 8-character password (hex)
-    $pwd = generatePassword();
+    // Define allowed fields and sanitize input
+    try {
+        $allowedFields = [
+            'first_name'  => 'text',
+            'last_name'   => 'text',
+            'user_email'  => 'email'
+        ];
 
-    // Prepare data with minimal inputs and required defaults
-    $formData = [
-        'first_name' => $_POST['first_name'] ?? '',
-        'last_name'  => $_POST['last_name'] ?? '',
-        'user_email' => $_POST['user_email'] ?? '',
-        'user_name'  => $_POST['user_email'] ?? '',
-        'users_ip'   => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
-        'date_created' => date('Y-m-d'),
-        'email_verify' => "PENDING",
-        'activation_code' => rand(1000000000, 9999999999),
-    ];
+        $input = sanitizeInput($_POST, $allowedFields);
+    } catch (Exception $e) {
+        $errors[] = $e->getMessage();
+    }
 
-   try {
-          $user->register($formData);
-          $success[] = "Registration successful! An email has been sent with the login credentials.";
-      } catch (Exception $e) {
-          logAppError($e); // Log actual error
-          $error[] = "Registration failed. Please try again later or contact support."; // Generic message to user
-      }
+    if (empty($errors)) {
+        $generatedPwd = generatePassword(); // 8-char secure password
 
+        $formData = [
+            'first_name'   => $input['first_name'],
+            'last_name'    => $input['last_name'],
+            'user_email'   => $input['user_email'],
+            'user_name'    => $input['user_email'],
+            'pwd'          => password_hash($generatedPwd, PASSWORD_BCRYPT),
+            'users_ip'     => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+            'date_created' => date('Y-m-d H:i:s'),
+            'email_verify' => 'PENDING',
+            'activation_code' => rand(1000000000, 9999999999),
+            'plainPassword' => $generatedPwd  // stored only temporarily
+        ];
+
+        try {
+            $user->register($formData);
+            $success[] = "Registration successful! A confirmation email will be sent with login instructions.";
+        } catch (Exception $e) {
+            logAppError($e);
+            $errors[] = "Registration failed. Please try again later.";
+        }
+    }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
