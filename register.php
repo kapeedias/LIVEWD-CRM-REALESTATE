@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/db.php';        // Your Database class file
-require_once __DIR__ . '/classes/users.php';    // Your User class file
+require_once __DIR__ . '/classes/User.php';    // Your User class file
 
 try {
     $pdo = Database::getInstance();

@@ -1,7 +1,7 @@
 <?php
 
 // Turn off displaying errors to users
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 
 // Enable logging
 ini_set('log_errors', 1);
