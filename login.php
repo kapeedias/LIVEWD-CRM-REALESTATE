@@ -35,12 +35,15 @@ foreach ($_SESSION['login_attempts'] as $time => $recordedIp) {
 // Count recent attempts from this IP
 $attempts = array_filter($_SESSION['login_attempts'], fn($v) => $v === $ip);
 
-if (count($attempts) >= $maxAttempts) {
-    $errors[] = 'Too many login attempts. Please wait before trying again.';
-}
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If too many attempts, block further processing
+
+    if (count($attempts) >= $maxAttempts) {
+    $errors[] = 'Too many login attempts. Please wait before trying again.';
+}
+
     if (!empty($errors)) {
         // Do nothing further; will show errors below
     } else {
