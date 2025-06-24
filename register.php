@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'date_created' => date('Y-m-d'),
         'email_verify' => "PENDING",
         'activation_code' => rand(1000000000, 9999999999),
-        'plainPassword' => $pwd,
+
     ];
 
    try {
