@@ -24,24 +24,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid email format.';
     } else {
         try {
-            /*$stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ? LIMIT 1");
+            $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ? LIMIT 1");
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$user) {
+             if (!$user) {
                 $error = 'User not found.';
             } elseif ((int)$user['banned'] === 1) {
                 $error = 'Your account has been banned.';
             } elseif ((int)$user['approved'] !== 1) {
                 $error = 'Your account has not been approved yet.';
-            } elseif (!$userObj->login($email, $password)) {
-                $error = 'Incorrect password.';
             } else {
-                header("Location: myaccount.php");
-                exit;
-
-             } */
-                 echo $password;
+                // Now try login (which should verify password)
+                if ($userObj->login($email, $password)) {
+                    // Login success
+                    header("Location: myaccount.php");
+                    exit;
+                } else {
+                    $error = 'Incorrect password.';
+                }
+            }
         } catch (PDOException $e) {
             error_log("LOGIN ERROR: " . $e->getMessage());
             $error = 'Login failed. Please try again later.';
