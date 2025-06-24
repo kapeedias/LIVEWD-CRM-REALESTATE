@@ -6,7 +6,6 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
 require_once __DIR__ . '/classes/User.php';
 
-
 try {
     $pdo = Database::getInstance();
     $userObj = new User($pdo);
@@ -18,38 +17,44 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['useremail'] ?? '');
-    echo $password = trim($_POST['userpassword'] ?? '');
+    $password = trim($_POST['userpassword'] ?? '');
 
+    // Validate email
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email format.';
     } else {
         try {
+            // Get user by email
             $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = :email LIMIT 1");
-            $stmt->execute(['email' => $email]); 
+            $stmt->execute(['email' => $email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-             if (!$user) {
-                $error = 'User not found.';
+            if (!$user) {
+                $error = 'Invalid email or password.';
+            } elseif (!password_verify($password, $user['pwd'])) {
+                $error = 'Invalid email or password.';
             } elseif ((int)$user['banned'] === 1) {
                 $error = 'Your account has been banned.';
             } elseif ((int)$user['approved'] !== 1) {
                 $error = 'Your account has not been approved yet.';
             } else {
-                // Now try login (which should verify password)
-                if ($userObj->login($email, $password)) {
-                    // Login success
-                    header("Location: myaccount.php");
-                    exit;
-                } else {
-                    $error = 'Incorrect password.';
-                }
+                // Login success — set session
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = $user['first_name'];
+                $_SESSION['user_email'] = $email;
+
+                // Redirect to user dashboard
+                header("Location: myaccount.php");
+                exit;
             }
+
         } catch (PDOException $e) {
             error_log("LOGIN ERROR: " . $e->getMessage());
             $error = 'Login failed. Please try again later.';
         }
     }
 }
+
 ?>
 
 <!DOCTYPE html>
