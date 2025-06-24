@@ -86,6 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           class="img-responsive-brand text-center">
                       </a>
                       <hr />
+                      <?php if ($error): ?>
+                      <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+                    <?php endif; ?>
                       <form class="forms-sample" method="POST" action="">
                         <div class="form-group">
                           <label for="InputEmail1">Email address</label>
