@@ -39,7 +39,7 @@ class User {
    
 
    public function register($data) {
-        $plainPassword = generatePassword(); // plain password to show if needed
+        $plainPassword = $data['plainPassword'] ?? generatePassword();  // plain password to show if needed
         $data['first_name'] = $_POST['first_name'] ?? '';
         $data['last_name']  = $_POST['last_name'] ?? '';
         $data['user_email'] = $_POST['user_email'] ?? '';
