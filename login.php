@@ -92,15 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       <form class="forms-sample" method="POST" action="">
                         <div class="form-group">
                           <label for="InputEmail1">Email address</label>
-                          <input type="email" class="form-control"
-                            id="useremail" placeholder="Email">
+                          <input type="email" class="form-control" id="useremail" name="useremail" placeholder="Email" required>
                         </div>
                         <div class="form-group">
                           <label for="InputPassword1">Password</label>
-                          <input type="password" class="form-control"
-                            id="userpassword"
-                            autocomplete="current-password"
-                            placeholder="Password">
+                             <input type="password" class="form-control" id="userpassword" name="userpassword" placeholder="Password" required>
                         </div>
                         <div
                           class="form-check form-check-flat form-check-primary">
