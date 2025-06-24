@@ -17,8 +17,8 @@ try {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $email = trim($_POST['useremail'] ?? '');
+    $password = $_POST['userpassword'] ?? '';
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email format.';
@@ -93,12 +93,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-group">
                           <label for="InputEmail1">Email address</label>
                           <input type="email" class="form-control"
-                            id="InputEmail1" placeholder="Email">
+                            id="useremail" placeholder="Email">
                         </div>
                         <div class="form-group">
                           <label for="InputPassword1">Password</label>
                           <input type="password" class="form-control"
-                            id="InputPassword1"
+                            id="userpassword"
                             autocomplete="current-password"
                             placeholder="Password">
                         </div>
