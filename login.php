@@ -8,6 +8,10 @@ require_once __DIR__ . '/classes/User.php';
 // ==== SECURE SESSION START ====
 secureSessionStart();
 
+// ==== ERROR DISPLAY HANDLER ====
+$errors = $_SESSION['login_errors'] ?? [];
+unset($_SESSION['login_errors']);
+
 try {
     $pdo = Database::getInstance();
     $userObj = new User($pdo);
@@ -15,7 +19,7 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
-$errors = [];
+
 
 // ==== RATE LIMITING CONFIG ====
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -38,6 +42,7 @@ $attempts = array_filter($_SESSION['login_attempts'], fn($v) => $v === $ip);
 
 // ==== LOGIN HANDLER ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $errors = [];
     if (count($attempts) >= $maxAttempts) {
         $errors[] = 'Too many login attempts. Please wait before trying again.';
     }
@@ -118,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // === LOG FAILED ATTEMPTS ===
+    // === LOG FAILED ATTEMPTS + REDIRECT ===
     if (!empty($errors)) {
         $_SESSION['login_attempts'][time()] = $ip;
 
@@ -137,6 +142,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'context_error' => $errorText
             ]
         );
+
+        // Save errors for display
+        $_SESSION['login_errors'] = $errors;
+        header("Location: login.php");
+        exit;
     }
 }
 ?>
