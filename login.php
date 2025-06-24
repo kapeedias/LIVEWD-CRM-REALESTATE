@@ -6,17 +6,46 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
 require_once __DIR__ . '/classes/User.php';
 
+
 try {
     $pdo = Database::getInstance();
-    $user = new User($pdo);
+    $userObj = new User($pdo);
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }
 
+$error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    echo "test";
-   }
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Invalid email format.';
+    } else {
+        try {
+            $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ? LIMIT 1");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                $error = 'User not found.';
+            } elseif ((int)$user['banned'] === 1) {
+                $error = 'Your account has been banned.';
+            } elseif ((int)$user['approved'] !== 1) {
+                $error = 'Your account has not been approved yet.';
+            } elseif (!$userObj->login($email, $password)) {
+                $error = 'Incorrect password.';
+            } else {
+                header("Location: myaccount.php");
+                exit;
+            }
+        } catch (PDOException $e) {
+            error_log("LOGIN ERROR: " . $e->getMessage());
+            $error = 'Login failed. Please try again later.';
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -25,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>NobleUI Responsive Bootstrap 4 Dashboard Template</title>
+    <title><?= APP_NAME ?> - Login</title>
     <!-- core:css -->
     <link rel="stylesheet" href="assets/vendors/core/core.css">
     <!-- endinject -->
