@@ -24,6 +24,8 @@ try {
 // ==== FORM SUBMISSION ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
+    $email = '';  // Initialize to avoid undefined variable warning
+    
     // === INPUT SANITIZATION ===
     try {
         $allowedFields = [
@@ -59,10 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // === EMAIL UNIQUENESS CHECK ===
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
-    $stmt->execute([$email]);
-    if ($stmt->fetchColumn() > 0) {
-        $errors[] = "The email address '{$email}' is already registered.";
+    if (empty($errors)) {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
+        $stmt->execute([$email]);
+        if ($stmt->fetchColumn() > 0) {
+            $errors[] = "The email address '{$email}' is already registered.";
+        }
     }
 
     // === CONTINUE IF NO ERRORS ===
@@ -89,21 +93,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $identifier = "New registration: {$email}";
             $user->logActivity($userId, $identifier, 'Registered');
 
-             // Store success message in session
-            $_SESSION['register_success'] = ["Registration successful! An email has been sent with login credentials."];
-
-            // Redirect to clear POST data and avoid form resubmission on refresh
-            header("Location: register.php");
-            exit;
-
+            $success[] = "Registration successful! An email has been sent with login credentials.";
         } catch (Exception $e) {
             error_log("REGISTRATION ERROR: " . $e->getMessage());
             $errors[] = "Registration failed. Please try again later.";
 
-            // Log error
+            // Log error safely with fallback email text
+            $emailForLog = $email ?: 'unknown email';
             $user->logActivity(
                 null,
-                "Registration failed for {$email}",
+                "Registration failed for {$emailForLog}",
                 'Registration Error',
                 [
                     'field_changed' => 'register',
@@ -114,15 +113,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
         }
     }
-  // If errors occurred, store them in session and redirect to clear POST data
-    if (!empty($errors)) {
-        $_SESSION['register_errors'] = $errors;
-        header("Location: register.php");
-        exit;
-    }
-
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
