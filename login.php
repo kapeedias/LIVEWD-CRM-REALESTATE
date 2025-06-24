@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
 
              } */
+                 echo $password;
         } catch (PDOException $e) {
             error_log("LOGIN ERROR: " . $e->getMessage());
             $error = 'Login failed. Please try again later.';
