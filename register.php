@@ -8,12 +8,6 @@ require_once __DIR__ . '/classes/User.php';
 // ==== SECURE SESSION START ====
 secureSessionStart();
 
-// ==== SESSION MESSAGE DISPLAY HANDLERS ====
-$errors = $_SESSION['register_errors'] ?? [];
-$success = $_SESSION['register_success'] ?? [];
-
-unset($_SESSION['register_errors'], $_SESSION['register_success']);
-
 try {
     $pdo = Database::getInstance();
     $user = new User($pdo);
