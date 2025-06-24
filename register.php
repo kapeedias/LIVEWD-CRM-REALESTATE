@@ -8,6 +8,12 @@ require_once __DIR__ . '/classes/User.php';
 // ==== SECURE SESSION START ====
 secureSessionStart();
 
+// ==== SESSION MESSAGE DISPLAY HANDLERS ====
+$errors = $_SESSION['register_errors'] ?? [];
+$success = $_SESSION['register_success'] ?? [];
+
+unset($_SESSION['register_errors'], $_SESSION['register_success']);
+
 try {
     $pdo = Database::getInstance();
     $user = new User($pdo);
@@ -15,10 +21,9 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
-$errors = [];
-$success = [];
-
+// ==== FORM SUBMISSION ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $errors = [];
     // === INPUT SANITIZATION ===
     try {
         $allowedFields = [
@@ -84,7 +89,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $identifier = "New registration: {$email}";
             $user->logActivity($userId, $identifier, 'Registered');
 
-            $success[] = "Registration successful! An email has been sent with login credentials.";
+             // Store success message in session
+            $_SESSION['register_success'] = ["Registration successful! An email has been sent with login credentials."];
+
+            // Redirect to clear POST data and avoid form resubmission on refresh
+            header("Location: register.php");
+            exit;
+
         } catch (Exception $e) {
             error_log("REGISTRATION ERROR: " . $e->getMessage());
             $errors[] = "Registration failed. Please try again later.";
@@ -103,6 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
         }
     }
+  // If errors occurred, store them in session and redirect to clear POST data
+    if (!empty($errors)) {
+        $_SESSION['register_errors'] = $errors;
+        header("Location: register.php");
+        exit;
+    }
+
 }
 ?>
 
@@ -135,18 +153,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <hr />
                                 Members Registration
                                 <hr />
-                                <?php if (!empty($error)): ?>
-                                <?php foreach ($error as $msg): ?>
-                                <p style="color:red;"><?= $msg ?></p>
-                                <hr />
-                                <?php endforeach; ?>
+                                <?php if (!empty($success)): ?>
+                                    <div class="alert alert-success">
+                                        <?= implode('<br>', $success) ?>
+                                    </div>
                                 <?php endif; ?>
 
-                                <?php if (!empty($success)): ?>
-                                <?php foreach ($success as $msg): ?>
-                                <p style="color:green;"><?= $msg ?></p>
-                                <hr />
-                                <?php endforeach; ?>
+                                <?php if (!empty($errors)): ?>
+                                    <div class="alert alert-danger">
+                                        <?= implode('<br>', $errors) ?>
+                                    </div>
                                 <?php endif; ?>
                                 <form id="forms-register" method="POST"
                                     action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
