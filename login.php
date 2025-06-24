@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           class="img-responsive-brand text-center">
                       </a>
                       <hr />
-                      <form class="forms-sample">
+                      <form class="forms-sample" method="POST" action="">
                         <div class="form-group">
                           <label for="InputEmail1">Email address</label>
                           <input type="email" class="form-control"
