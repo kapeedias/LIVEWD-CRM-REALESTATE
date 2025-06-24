@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <script src="https://www.google.com/recaptcha/api.js" async defer>
                         </script>    
                                     <button type="submit"
-                                            class="btn btn-primary text-white">Register</button></div>
+                                            class="btn btn-primary text-white mt-3">Register</button></div>
                                     <a href="login.php" class="d-block mt-3 text-right text-muted">Login Now</a>
                                 </form>
                             </div>
