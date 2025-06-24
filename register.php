@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Log successful registration
             $userId = $pdo->lastInsertId();
             $identifier = "New registration: {$email}";
-            $user->logActivity($userId, $identifier, 'Registered');
+            //$user->logActivity($userId, $identifier, 'Registered');
 
             $success[] = "Registration successful! An email has been sent with login credentials.";
         } catch (Exception $e) {
