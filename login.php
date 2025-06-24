@@ -78,10 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ((int)$user['approved'] !== 1) {
                 $error = 'Your account has not been approved yet.';
             } else {
-                // Login success — set session
+                // Success! Clear attempts for this IP
+                foreach ($_SESSION['login_attempts'] as $time => $attemptIp) {
+                    if ($attemptIp === $ip) {
+                        unset($_SESSION['login_attempts'][$time]);
+                    }
+                }
+
+                // Set session info
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['first_name'];
                 $_SESSION['user_email'] = $email;
+
 
                 // Redirect to user dashboard
                 header("Location: myaccount.php");
