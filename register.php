@@ -1,8 +1,12 @@
 <?php
+// ==== CONFIG & DEPENDENCIES ====
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
 require_once __DIR__ . '/classes/User.php';
+
+// ==== SECURE SESSION START ====
+secureSessionStart();
 
 try {
     $pdo = Database::getInstance();
@@ -15,46 +19,92 @@ $errors = [];
 $success = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Define allowed fields and sanitize input
+    // === INPUT SANITIZATION ===
     try {
         $allowedFields = [
-            'first_name'  => 'text',
-            'last_name'   => 'text',
-            'user_email'  => 'email'
+            'first_name'  => 'string',
+            'last_name'   => 'string',
+            'user_email'  => 'email',
         ];
-
         $input = sanitizeInput($_POST, $allowedFields);
+
+        $email      = $input['user_email'];
+        $firstName  = $input['first_name'];
+        $lastName   = $input['last_name'];
     } catch (Exception $e) {
         $errors[] = $e->getMessage();
     }
 
-    if (empty($errors)) {
-        $generatedPwd = generatePassword(); // 8-char secure password
+    // === reCAPTCHA VERIFICATION ===
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;
+    $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
+    if (empty($recaptchaResponse)) {
+        $errors[] = 'Please complete the reCAPTCHA.';
+    } else {
+        $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" .
+            urlencode($recaptchaSecret) .
+            "&response=" . urlencode($recaptchaResponse) .
+            "&remoteip=" . urlencode($ip));
+        $captchaResult = json_decode($verify);
+        if (!$captchaResult->success) {
+            $errors[] = 'reCAPTCHA verification failed.';
+        }
+    }
+
+    // === EMAIL UNIQUENESS CHECK ===
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM general_info_users WHERE user_email = ?");
+    $stmt->execute([$email]);
+    if ($stmt->fetchColumn() > 0) {
+        $errors[] = "The email address '{$email}' is already registered.";
+    }
+
+    // === CONTINUE IF NO ERRORS ===
+    if (empty($errors)) {
+        $plainPassword = generatePassword(); // secure random password
         $formData = [
-            'first_name'   => $input['first_name'],
-            'last_name'    => $input['last_name'],
-            'user_email'   => $input['user_email'],
-            'user_name'    => $input['user_email'],
-            'pwd'          => password_hash($generatedPwd, PASSWORD_BCRYPT),
-            'users_ip'     => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
-            'date_created' => date('Y-m-d H:i:s'),
-            'email_verify' => 'PENDING',
-            'activation_code' => rand(1000000000, 9999999999),
-            'plainPassword' => $generatedPwd  // stored only temporarily
+            'first_name'    => $firstName,
+            'last_name'     => $lastName,
+            'user_email'    => $email,
+            'user_name'     => $email,
+            'users_ip'      => $ip,
+            'date_created'  => date('Y-m-d H:i:s'),
+            'verification_email_sent' => '0000-00-00 00:00:00',
+            'md5_id'        => md5(uniqid(mt_rand(), true)),
+            'termination_reason' => $plainPassword, // temporarily store plain pass
+            'pwd'           => password_hash($plainPassword, PASSWORD_BCRYPT),
         ];
 
         try {
             $user->register($formData);
-            $success[] = "Registration successful! A confirmation email will be sent with login instructions.";
+
+            // Log successful registration
+            $userId = $pdo->lastInsertId();
+            $identifier = "New registration: {$email}";
+            $user->logActivity($userId, $identifier, 'Registered');
+
+            $success[] = "Registration successful! An email has been sent with login credentials.";
         } catch (Exception $e) {
-            logAppError($e);
+            error_log("REGISTRATION ERROR: " . $e->getMessage());
             $errors[] = "Registration failed. Please try again later.";
+
+            // Log error
+            $user->logActivity(
+                null,
+                "Registration failed for {$email}",
+                'Registration Error',
+                [
+                    'field_changed' => 'register',
+                    'old_value' => null,
+                    'new_value' => 'error',
+                    'context_error' => $e->getMessage()
+                ]
+            );
         }
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">

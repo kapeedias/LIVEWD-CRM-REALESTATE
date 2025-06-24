@@ -1,11 +1,12 @@
 <?php
-session_start();
-
 // ==== CONFIG & DEPENDENCIES ====
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
 require_once __DIR__ . '/classes/User.php';
+
+// ==== SECURE SESSION START ====
+secureSessionStart();
 
 try {
     $pdo = Database::getInstance();
@@ -35,15 +36,15 @@ foreach ($_SESSION['login_attempts'] as $time => $recordedIp) {
 // Count login attempts from this IP
 $attempts = array_filter($_SESSION['login_attempts'], fn($v) => $v === $ip);
 
-// ==== LOGIN SUBMISSION HANDLER ====
+// ==== LOGIN HANDLER ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (count($attempts) >= $maxAttempts) {
         $errors[] = 'Too many login attempts. Please wait before trying again.';
     }
 
     if (empty($errors)) {
-        // ==== INPUT SANITIZATION ====
         try {
+            // === INPUT SANITIZATION ===
             $allowedFields = [
                 'useremail'    => 'email',
                 'userpassword' => 'password'
@@ -51,13 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $input = sanitizeInput($_POST, $allowedFields);
             $email = $input['useremail'];
             $password = $input['userpassword'];
-
         } catch (Exception $e) {
             $errors[] = $e->getMessage();
         }
 
-        // ==== reCAPTCHA VERIFICATION ====
-        $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;;
+        // === reCAPTCHA VERIFICATION ===
+        $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;
         $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
         if (empty($recaptchaResponse)) {
@@ -68,13 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "&response=" . urlencode($recaptchaResponse) .
                 "&remoteip=" . urlencode($ip));
             $captchaResult = json_decode($verify);
-
             if (!$captchaResult->success) {
                 $errors[] = 'reCAPTCHA verification failed.';
             }
         }
 
-        // ==== DATABASE AUTH ====
+        // === DATABASE AUTH ===
         if (empty($errors)) {
             try {
                 $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = :email LIMIT 1");
@@ -95,7 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
-                    // ==== SET SESSION INFO ====
+                    session_regenerate_id(true); // Prevent session fixation
+
                     $_SESSION['user_id']     = $user['id'];
                     $_SESSION['user_name']   = $user['first_name'];
                     $_SESSION['user_email']  = $email;
@@ -108,7 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $identifier = "User {$user['first_name']} ({$email}) logged in";
                     $userObj->logActivity($user['id'], $identifier, 'Login');
 
-                    // ==== REDIRECT ====
                     header("Location: myaccount.php");
                     exit;
                 }
@@ -119,12 +118,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Record failed attempt
+    // === LOG FAILED ATTEMPTS ===
     if (!empty($errors)) {
         $_SESSION['login_attempts'][time()] = $ip;
+
+        $errorText = implode(" | ", $errors);
+        $identifier = "Failed login attempt for email: {$email}";
+
+        $userId = $user['id'] ?? null;
+        $userObj->logActivity(
+            $userId,
+            $identifier,
+            'Login Error',
+            [
+                'field_changed' => 'login_attempt',
+                'old_value'     => 'unauthenticated',
+                'new_value'     => 'error',
+                'context_error' => $errorText
+            ]
+        );
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
