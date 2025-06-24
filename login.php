@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid email format.';
     } else {
         try {
-            $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ? LIMIT 1");
+            /*$stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ? LIMIT 1");
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -39,7 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 header("Location: myaccount.php");
                 exit;
-            }
+
+             } */
         } catch (PDOException $e) {
             error_log("LOGIN ERROR: " . $e->getMessage());
             $error = 'Login failed. Please try again later.';
