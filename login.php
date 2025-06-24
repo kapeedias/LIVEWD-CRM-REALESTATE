@@ -163,6 +163,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           </label>
                         </div>
                         <div class="mt-3">
+                          <div class="g-recaptcha" data-sitekey="<? GOOGLE_RECAPTCHA_SITE_KEY ?>"></div>
+                          <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
                           <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Login</button>
                       
                         </div>
