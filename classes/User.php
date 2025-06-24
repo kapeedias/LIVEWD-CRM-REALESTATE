@@ -40,15 +40,19 @@ class User {
 
    public function register($data) {
         $plainPassword = $data['plainPassword'] ?? generatePassword();  // plain password to show if needed
-        $data['first_name'] = $_POST['first_name'] ?? '';
-        $data['last_name']  = $_POST['last_name'] ?? '';
-        $data['user_email'] = $_POST['user_email'] ?? '';
-        $data['pwd']        = password_hash($plainPassword, PASSWORD_BCRYPT);
-        $data['user_name']  = $_POST['user_email'] ?? '';
-        $data['users_ip']   = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        $data['date_created'] = date('Y-m-d H:i:s');
-        $data['verification_email_sent'] = '0000-00-00 00:00:00';
-        $data['md5_id'] = md5(uniqid(mt_rand(), true));
+         // Build the data array with only the database fields
+    $data = [
+        'first_name' => $_POST['first_name'] ?? '',
+        'last_name'  => $_POST['last_name'] ?? '',
+        'user_email' => $_POST['user_email'] ?? '',
+        'pwd'        => password_hash($plainPassword, PASSWORD_BCRYPT),
+        'user_name'  => $_POST['user_email'] ?? '',
+        'users_ip'   => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+        'date_created' => date('Y-m-d H:i:s'),
+        'verification_email_sent' => '0000-00-00 00:00:00',
+        'md5_id' => md5(uniqid(mt_rand(), true))
+    ];
+        
         
             // Check for duplicate email
             $exists = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->userTable} WHERE user_email = ?");
