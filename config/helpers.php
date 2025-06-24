@@ -42,3 +42,52 @@ function sanitizeInput(array $input, array $allowedFields): array {
 
     return $clean;
 }
+
+function secureSessionStart(): void {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+
+        // Prevent JavaScript access to session cookie
+        ini_set('session.cookie_httponly', 1);
+
+        // Send cookie only over HTTPS
+        ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) ? 1 : 0);
+
+        // Enforce strict session handling
+        ini_set('session.use_strict_mode', 1);
+
+        // Add SameSite policy
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => $_SERVER['HTTP_HOST'],
+            'secure' => isset($_SERVER['HTTPS']),
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+    }
+}
+
+function isSessionHijacked(): bool {
+    if (!isset($_SESSION['user_ip'], $_SESSION['user_agent'])) {
+        return true;
+    }
+
+    $ipCheck = $_SESSION['user_ip'] === ($_SERVER['REMOTE_ADDR'] ?? '');
+    $agentCheck = $_SESSION['user_agent'] === ($_SERVER['HTTP_USER_AGENT'] ?? '');
+
+    return !($ipCheck && $agentCheck);
+}
+
+function enforceSessionSecurity(): void {
+    $timeoutDuration = 1800; // 30 minutes
+
+    if (isSessionHijacked() || (isset($_SESSION['last_activity']) && time() - $_SESSION['last_activity'] > $timeoutDuration)) {
+        session_unset();
+        session_destroy();
+        header("Location: login.php?timeout=1");
+        exit;
+    }
+
+    $_SESSION['last_activity'] = time();
+}
