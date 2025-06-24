@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $_SESSION['last_activity'] = time();
 
           // Use your existing logActivity method
-          $identifier = "User {$user['first_name']} ({$email}) logged in.";
+          $identifier = "User {$user['first_name']} ({$email}) logged in ";
           $userObj->logActivity(
               $user['id'],
               $identifier,
