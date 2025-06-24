@@ -24,6 +24,7 @@ try {
 // ==== FORM SUBMISSION ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
+    $success = [];
     $email = '';  // Initialize to avoid undefined variable warning
     
     // === INPUT SANITIZATION ===
@@ -46,22 +47,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // === reCAPTCHA VERIFICATION ===
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
    
-    // === reCAPTCHA VERIFICATION ===
-        $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;
-        $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+    $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;
+    $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
-        if (empty($recaptchaResponse)) {
-            $errors[] = 'Please complete the reCAPTCHA.';
-        } else {
-            $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" .
-                urlencode($recaptchaSecret) .
-                "&response=" . urlencode($recaptchaResponse) .
-                "&remoteip=" . urlencode($ip));
-            $captchaResult = json_decode($verify);
-            if (!$captchaResult->success) {
-                $errors[] = 'reCAPTCHA verification failed.';
-            }
+    if (empty($recaptchaResponse)) {
+        $errors[] = 'Please complete the reCAPTCHA.';
+    } else {
+        $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" .
+            urlencode($recaptchaSecret) .
+            "&response=" . urlencode($recaptchaResponse) .
+            "&remoteip=" . urlencode($ip));
+        $captchaResult = json_decode($verify);
+        if (!$captchaResult->success) {
+            $errors[] = 'reCAPTCHA verification failed.';
         }
+    }
 
     // === EMAIL UNIQUENESS CHECK ===
     if (empty($errors)) {
@@ -116,7 +116,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
         }
     }
+    // === STORE MESSAGES IN SESSION AND REDIRECT (PRG) ===
+    $_SESSION['register_errors'] = $errors;
+    $_SESSION['register_success'] = $success;
+
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
+
+// ==== ON GET, SHOW MESSAGES FROM SESSION ====
+$errors = $_SESSION['register_errors'] ?? [];
+$success = $_SESSION['register_success'] ?? [];
+unset($_SESSION['register_errors'], $_SESSION['register_success']);
+
 ?>
 
 
