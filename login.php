@@ -173,12 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <input type="password" class="form-control" id="userpassword"
                                                     name="userpassword" placeholder="Password" required>
                                             </div>
-                                            <div class="form-check form-check-flat form-check-primary">
-                                                <label class="form-check-label">
-                                                    <input type="checkbox" class="form-check-input">
-                                                    Remember me
-                                                </label>
-                                            </div>
+                                            
                                             <div class="mt-3">
                                                 <div class="g-recaptcha"
                                                     data-sitekey="6LfApmsrAAAAAKYYa1iy44IfsO7hp31gPrZh2jvu"></div>
@@ -186,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </script>
 
                                                 <button type="submit"
-                                                    class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Login</button>
+                                                    class="btn btn-primary mr-2 mb-2 mb-md-0 mt-3 text-white">Login</button>
 
                                             </div>
                                             <a href="register.html" class="d-block mt-3 text-right text-muted">Forgot
