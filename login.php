@@ -18,7 +18,7 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['useremail'] ?? '');
-    $password = trim($_POST['userpassword'] ?? '');
+    echo $password = trim($_POST['userpassword'] ?? '');
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Invalid email format.';
