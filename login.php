@@ -1,131 +1,128 @@
 <?php
 session_start();
 
+// ==== CONFIG & DEPENDENCIES ====
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
 require_once __DIR__ . '/classes/User.php';
 
 try {
-  $pdo = Database::getInstance();
-  $userObj = new User($pdo);
+    $pdo = Database::getInstance();
+    $userObj = new User($pdo);
 } catch (PDOException $e) {
-  die("Database connection failed: " . $e->getMessage());
+    die("Database connection failed: " . $e->getMessage());
 }
 
-// Initialize errors array properly
 $errors = [];
 
-// === RATE LIMITING CONFIG ===
-$ip = $_SERVER['REMOTE_ADDR'];
+// ==== RATE LIMITING CONFIG ====
+$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $maxAttempts = 5;
 $lockoutTime = 15 * 60; // 15 minutes
 
 if (!isset($_SESSION['login_attempts'])) {
-  $_SESSION['login_attempts'] = [];
+    $_SESSION['login_attempts'] = [];
 }
 
-// Remove old attempts outside the lockout window
+// Remove expired attempts
 foreach ($_SESSION['login_attempts'] as $time => $recordedIp) {
-  if (time() - $time > $lockoutTime) {
-    unset($_SESSION['login_attempts'][$time]);
-  }
+    if (time() - $time > $lockoutTime) {
+        unset($_SESSION['login_attempts'][$time]);
+    }
 }
 
-// Count recent attempts from this IP
+// Count login attempts from this IP
 $attempts = array_filter($_SESSION['login_attempts'], fn($v) => $v === $ip);
 
-
-
+// ==== LOGIN SUBMISSION HANDLER ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  // If too many attempts, block further processing
-
-  if (count($attempts) >= $maxAttempts) {
-    $errors[] = 'Too many login attempts. Please wait before trying again.';
-  }
-
-  if (!empty($errors)) {
-    // Do nothing further; will show errors below
-  } else {
-    $email = trim($_POST['useremail'] ?? '');
-    $password = trim($_POST['userpassword'] ?? '');
-
-    // === reCAPTCHA verification ===
-    $recaptchaSecret = '6LfApmsrAAAAADLc6Gg38GfcZenY3XCSfgjKdaOW';  // Replace with your secret key
-    $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
-
-    if (empty($recaptchaResponse)) {
-      $errors[] = 'Please complete the reCAPTCHA.';
-    } else {
-      $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret="
-        . urlencode($recaptchaSecret)
-        . "&response=" . urlencode($recaptchaResponse)
-        . "&remoteip=" . urlencode($ip));
-      $captchaResult = json_decode($verify);
-
-      if (!$captchaResult->success) {
-        $errors[] = 'reCAPTCHA verification failed. Please try again.';
-      }
+    if (count($attempts) >= $maxAttempts) {
+        $errors[] = 'Too many login attempts. Please wait before trying again.';
     }
 
-    // Validate email format
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-      $errors[] = 'Invalid email format.';
-    }
-
-    // Proceed only if no errors so far
     if (empty($errors)) {
-      try {
-        $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = :email LIMIT 1");
-        $stmt->execute(['email' => $email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        // ==== INPUT SANITIZATION ====
+        try {
+            $allowedFields = [
+                'useremail'    => 'email',
+                'userpassword' => 'password'
+            ];
+            $input = sanitizeInput($_POST, $allowedFields);
+            $email = $input['useremail'];
+            $password = $input['userpassword'];
 
-        if (!$user) {
-          $errors[] = 'Invalid email or password.';
-        } elseif (!password_verify($password, $user['pwd'])) {
-          $errors[] = 'Invalid email or password.';
-        } elseif ((int)$user['banned'] === 1) {
-          $errors[] = 'Your account has been banned.';
-        } elseif ((int)$user['approved'] !== 1) {
-          $errors[] = 'Your account has not been approved yet.';
-        } else {
-          // Success! Clear attempts for this IP
-          foreach ($_SESSION['login_attempts'] as $time => $attemptIp) {
-            if ($attemptIp === $ip) {
-              unset($_SESSION['login_attempts'][$time]);
-            }
-          }
-
-          // Set session info
-          $_SESSION['user_id'] = $user['id'];
-          $_SESSION['user_name'] = $user['first_name'];
-          $_SESSION['user_email'] = $email;
-          $_SESSION['login_time'] = time();
-          $_SESSION['last_activity'] = time();
-
-          // Use your existing logActivity method
-          $identifier = "User {$user['first_name']} ({$email}) logged in ";
-          $userObj->logActivity(
-              $user['id'],
-              $identifier,
-              'Login'
-          );
-
-          // Redirect to user dashboard
-          header("Location: myaccount.php");
-          exit;
+        } catch (Exception $e) {
+            $errors[] = $e->getMessage();
         }
-      } catch (PDOException $e) {
-        error_log("LOGIN ERROR: " . $e->getMessage());
-        $errors[] = 'Login failed. Please try again later.';
-      }
-    }
-  }
 
-  // Record this login attempt only if errors occurred (failed login)
-  if (!empty($errors)) {
-    $_SESSION['login_attempts'][time()] = $ip;
-  }
+        // ==== reCAPTCHA VERIFICATION ====
+        $recaptchaSecret = GOOGLE_RECAPTCHA_SECRET_KEY;;
+        $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
+
+        if (empty($recaptchaResponse)) {
+            $errors[] = 'Please complete the reCAPTCHA.';
+        } else {
+            $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=" .
+                urlencode($recaptchaSecret) .
+                "&response=" . urlencode($recaptchaResponse) .
+                "&remoteip=" . urlencode($ip));
+            $captchaResult = json_decode($verify);
+
+            if (!$captchaResult->success) {
+                $errors[] = 'reCAPTCHA verification failed.';
+            }
+        }
+
+        // ==== DATABASE AUTH ====
+        if (empty($errors)) {
+            try {
+                $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = :email LIMIT 1");
+                $stmt->execute(['email' => $email]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$user || !password_verify($password, $user['pwd'])) {
+                    $errors[] = 'Invalid email or password.';
+                } elseif ((int)$user['banned'] === 1) {
+                    $errors[] = 'Your account has been banned.';
+                } elseif ((int)$user['approved'] !== 1) {
+                    $errors[] = 'Your account has not been approved yet.';
+                } else {
+                    // ==== SUCCESSFUL LOGIN ====
+                    foreach ($_SESSION['login_attempts'] as $time => $attemptIp) {
+                        if ($attemptIp === $ip) {
+                            unset($_SESSION['login_attempts'][$time]);
+                        }
+                    }
+
+                    // ==== SET SESSION INFO ====
+                    $_SESSION['user_id']     = $user['id'];
+                    $_SESSION['user_name']   = $user['first_name'];
+                    $_SESSION['user_email']  = $email;
+                    $_SESSION['login_time']  = time();
+                    $_SESSION['last_activity'] = time();
+                    $_SESSION['user_ip']     = $ip;
+                    $_SESSION['user_agent']  = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+
+                    // ==== ACTIVITY LOG ====
+                    $identifier = "User {$user['first_name']} ({$email}) logged in";
+                    $userObj->logActivity($user['id'], $identifier, 'Login');
+
+                    // ==== REDIRECT ====
+                    header("Location: myaccount.php");
+                    exit;
+                }
+            } catch (PDOException $e) {
+                error_log("LOGIN ERROR: " . $e->getMessage());
+                $errors[] = 'Login failed. Please try again later.';
+            }
+        }
+    }
+
+    // Record failed attempt
+    if (!empty($errors)) {
+        $_SESSION['login_attempts'][time()] = $ip;
+    }
 }
 ?>
 
@@ -189,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                       <div class="mt-3">
                         <div class="g-recaptcha"
-                          data-sitekey="6LfApmsrAAAAAKYYa1iy44IfsO7hp31gPrZh2jvu"></div>
+                          data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY; ?>"></div>
                         <script src="https://www.google.com/recaptcha/api.js" async defer>
                         </script>
 
