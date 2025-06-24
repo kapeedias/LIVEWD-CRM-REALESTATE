@@ -29,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // === INPUT SANITIZATION ===
     try {
         $allowedFields = [
-            'first_name'  => 'string',
-            'last_name'   => 'string',
+            'first_name'  => 'text',
+            'last_name'   => 'text',
             'user_email'  => 'email',
         ];
         $input = sanitizeInput($_POST, $allowedFields);
@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email      = $input['user_email'];
         $firstName  = $input['first_name'];
         $lastName   = $input['last_name'];
+
     } catch (Exception $e) {
         $errors[] = $e->getMessage();
     }
