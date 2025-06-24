@@ -20,15 +20,17 @@ $message = '';
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user) {
-        $message = "User with ID $userId not found.";
+        echo $message = "User with ID $userId not found.";
     } else {
         $hashedPassword = $user['pwd'];
 
         if (password_verify('@_aPTE=I_Qx)2m21Ojstl', $hashedPassword)) {
-            $message = "✅ Password is CORRECT!";
+             echo $message = "✅ Password is CORRECT!";
         } else {
-            $message = "❌ Password is INCORRECT.";
+            echo $message = "❌ Password is INCORRECT.";
         }
     }
 
+
+    
 ?>
