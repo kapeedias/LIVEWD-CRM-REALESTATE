@@ -13,70 +13,10 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
-$userObj = new User($pdo);
-$error = '';
-$maxAttempts = 5;
-$lockoutTime = 15; // minutes
 
-$ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-/*
-function tooManyAttempts(PDO $pdo, string $ip, int $maxAttempts, int $lockoutTime): bool {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM login_attempts WHERE ip_address = ? AND attempt_time > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
-    $stmt->execute([$ip, $lockoutTime]);
-    return $stmt->fetchColumn() >= $maxAttempts;
-}
-
-function logAttempt(PDO $pdo, string $ip, string $email): void {
-    $stmt = $pdo->prepare("INSERT INTO login_attempts (ip_address, email, attempt_time) VALUES (?, ?, NOW())");
-    $stmt->execute([$ip, $email]);
-}
-*/
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $emailOrUsername = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-  $message="test";
-   // if (!filter_var($emailOrUsername, FILTER_VALIDATE_EMAIL) && empty($emailOrUsername)) {
-//$error = 'Please enter a valid email or username.';
-  //  } /*elseif (tooManyAttempts($pdo, $ip, $maxAttempts, $lockoutTime)) {
-       // $error = "Too many failed attempts. Try again in {$lockoutTime} minutes.";
-    
-      //} //else {
-      /*
-        try {
-            // Check if user exists and is allowed to login
-            $stmt = $pdo->prepare("SELECT id, first_name, approved, banned FROM general_info_users WHERE user_email = ? OR user_name = ?");
-            $stmt->execute([$emailOrUsername, $emailOrUsername]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$user) {
-                logAttempt($pdo, $ip, $emailOrUsername);
-                $error = 'User not found.';
-            } elseif ((int)$user['banned'] === 1) {
-                $error = 'Your account has been banned.';
-            } elseif ((int)$user['approved'] !== 1) {
-                $error = 'Your account is not approved yet.';
-            } elseif (!$userObj->login($emailOrUsername, $password)) {
-                logAttempt($pdo, $ip, $emailOrUsername);
-                $error = 'Incorrect username/email or password.';
-            } else {
-                // Login success - user info saved in $_SESSION['user'] by User::login()
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['first_name'];
-
-                // Clear login attempts for this IP on success
-                $pdo->prepare("DELETE FROM login_attempts WHERE ip_address = ?")->execute([$ip]);
-
-                header("Location: myaccount.php");
-                exit;
-            }
-        } catch (PDOException $e) {
-            error_log("LOGIN ERROR: " . $e->getMessage());
-            $error = 'Login failed. Please try again later.';
-        }*/
-    //}
-
-
-  //}
+    echo "test";
+   }
 ?>
 
 <!DOCTYPE html>
