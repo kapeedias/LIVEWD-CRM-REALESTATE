@@ -43,6 +43,11 @@ define('APP_ROOT', dirname(__DIR__));
 // Login/Reset URL (can be routed to actual files)
 define('LOGIN_URL', SITE_URL . 'login.php');
 define('RESET_URL', SITE_URL . 'reset_password.php');
+define('SESSION_TIMEOUT_SECONDS', 1800); // 30 minutes
+define('SESSION_ENFORCE_IP_CHECK', true);
+define('SESSION_ENFORCE_UA_CHECK', true);
+define('SESSION_REDIRECT_ON_TIMEOUT', 'login.php?timeout=1');
+
 
 // SendGrid settings
 define('SENDGRID_API_KEY', 'your-sendgrid-api-key');

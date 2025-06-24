@@ -69,25 +69,54 @@ function secureSessionStart(): void {
 }
 
 function isSessionHijacked(): bool {
-    if (!isset($_SESSION['user_ip'], $_SESSION['user_agent'])) {
+    $expectedIp = $_SESSION['user_ip'] ?? null;
+    $expectedAgent = $_SESSION['user_agent'] ?? null;
+
+    $currentIp = $_SERVER['REMOTE_ADDR'] ?? '';
+    $currentAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+
+    if (SESSION_ENFORCE_IP_CHECK && $expectedIp !== $currentIp) {
         return true;
     }
 
-    $ipCheck = $_SESSION['user_ip'] === ($_SERVER['REMOTE_ADDR'] ?? '');
-    $agentCheck = $_SESSION['user_agent'] === ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if (SESSION_ENFORCE_UA_CHECK && $expectedAgent !== $currentAgent) {
+        return true;
+    }
 
-    return !($ipCheck && $agentCheck);
+    return false;
 }
 
-function enforceSessionSecurity(): void {
-    $timeoutDuration = 1800; // 30 minutes
 
-    if (isSessionHijacked() || (isset($_SESSION['last_activity']) && time() - $_SESSION['last_activity'] > $timeoutDuration)) {
+function enforceSessionSecurity(): void {
+    $timeout = defined('SESSION_TIMEOUT_SECONDS') ? SESSION_TIMEOUT_SECONDS : 1800;
+    $redirect = defined('SESSION_REDIRECT_ON_TIMEOUT') ? SESSION_REDIRECT_ON_TIMEOUT : 'login.php?timeout=1';
+
+    $now = time();
+
+    // Hijacking or Timeout check
+    if (
+        isSessionHijacked() ||
+        (isset($_SESSION['last_activity']) && ($now - $_SESSION['last_activity']) > $timeout)
+    ) {
+        // Log activity (optional)
+        if (isset($_SESSION['user_id'])) {
+            try {
+                $pdo = Database::getInstance();
+                $userObj = new User($pdo);
+                $reason = isSessionHijacked() ? "Session hijacking suspected" : "Session timed out";
+                $userObj->logActivity($_SESSION['user_id'], $reason, 'Forced Logout');
+            } catch (Throwable $e) {
+                error_log("Session termination log failed: " . $e->getMessage());
+            }
+        }
+
         session_unset();
         session_destroy();
-        header("Location: login.php?timeout=1");
+        header("Location: $redirect");
         exit;
     }
 
-    $_SESSION['last_activity'] = time();
+    // Update last activity
+    $_SESSION['last_activity'] = $now;
 }
+
