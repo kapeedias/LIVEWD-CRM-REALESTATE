@@ -1,47 +1,67 @@
 <?php
 session_start();
+
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/config/helpers.php';
+require_once __DIR__ . '/classes/User.php';
+
+$userObj = new User($pdo);
+$error = '';
+$maxAttempts = 5;
+$lockoutTime = 15; // minutes
+
+$ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+function tooManyAttempts(PDO $pdo, string $ip, int $maxAttempts, int $lockoutTime): bool {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM login_attempts WHERE ip_address = ? AND attempt_time > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
+    $stmt->execute([$ip, $lockoutTime]);
+    return $stmt->fetchColumn() >= $maxAttempts;
+}
+
+function logAttempt(PDO $pdo, string $ip, string $email): void {
+    $stmt = $pdo->prepare("INSERT INTO login_attempts (ip_address, email, attempt_time) VALUES (?, ?, NOW())");
+    $stmt->execute([$ip, $email]);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        exit('Invalid email format.');
-    }
+        $error = 'Invalid email format.';
+    } elseif (tooManyAttempts($pdo, $ip, $maxAttempts, $lockoutTime)) {
+        $error = "Too many failed attempts. Try again in {$lockoutTime} minutes.";
+    } else {
+        try {
+            $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    try {
-        $stmt = $pdo->prepare("SELECT id, first_name, pwd, approved, banned FROM general_info_users WHERE user_email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$user) {
+                logAttempt($pdo, $ip, $email);
+                $error = 'User not found.';
+            } elseif ((int)$user['banned'] === 1) {
+                $error = 'Your account has been banned.';
+            } elseif ((int)$user['approved'] !== 1) {
+                $error = 'Your account is not approved yet.';
+            } elseif (!$userObj->login($email, $password)) {
+                logAttempt($pdo, $ip, $email);
+                $error = 'Incorrect password.';
+            } else {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = $user['first_name'];
 
-        if (!$user) {
-            exit('User not found.');
+                // Clear login attempts on successful login
+                $pdo->prepare("DELETE FROM login_attempts WHERE ip_address = ?")->execute([$ip]);
+
+                header("Location: myaccount.php");
+                exit;
+            }
+        } catch (PDOException $e) {
+            error_log("LOGIN ERROR: " . $e->getMessage());
+            $error = 'Login failed. Please try again later.';
         }
-
-        if ((int)$user['banned'] === 1) {
-            exit('Your account has been banned.');
-        }
-
-        if ((int)$user['approved'] !== 1) {
-            exit('Your account is not approved yet.');
-        }
-
-        if (!password_verify($password, $user['pwd'])) {
-            exit('Incorrect password.');
-        }
-
-        // Password is correct, set session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_name'] = $user['first_name'];
-
-        echo "<h3>Login successful. Welcome, " . htmlspecialchars($user['first_name']) . "!</h3>";
-        echo "<a href='myaccount.php'>Go to Dashboard</a>";
-
-    } catch (PDOException $e) {
-        error_log("LOGIN ERROR: " . $e->getMessage());
-        exit('Login failed. Please try again later.');
     }
 }
 ?>
