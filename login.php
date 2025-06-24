@@ -35,7 +35,7 @@ $attempts = array_filter($_SESSION['login_attempts'], fn($v) => $v === $ip);
 
 if (count($attempts) >= $maxAttempts) {
     $error='Too many login attempts. Please wait before trying again.';
-    exit;
+   
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($recaptchaResponse)) {
         $error ='Please complete the reCAPTCHA.';
-        exit;
+       
     }
 
     $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecret}&response={$recaptchaResponse}");
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$captchaResult->success) {
         $error ='reCAPTCHA verification failed. Please try again.';
-        exit;
+       
     }
 
     // Validate email
@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       </a>
                       <hr />
                       <?php if ($error): ?>
-                      <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+                      <div class="alert alert-danger"><?= htmlspecialchars($error); ?></div>
                     <?php endif; ?>
                       <form class="forms-sample" method="POST" action="">
                         <div class="form-group">
@@ -186,7 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <!-- core:js -->
     <script src="assets/vendors/core/core.js"></script>
-   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script src="assets/vendors/feather-icons/feather.min.js"></script>
     <script src="assets/js/template.js"></script>
   </body>
