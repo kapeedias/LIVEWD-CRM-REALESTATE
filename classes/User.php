@@ -81,14 +81,12 @@ class User {
    public function login($username, $password) {
     $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE user_name = :username OR user_email = :username LIMIT 1");
     $stmt->execute(['username' => $username]);
-
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
     if ($user && password_verify($password, $user['pwd'])) {
         $_SESSION['user'] = $user;
-
         // Build descriptive identifier text for logging
         $identifier = "User with ID {$user['id']} logged in using username/email '{$username}' from IP " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
-
         $this->logActivity($user['id'], $identifier, 'Logged In');
         return true;
     }
@@ -172,7 +170,6 @@ class User {
 
     $this->logActivity($userId, $activityText, 'Updated Profile');
 }
-
 
     public function track($userId, $action) {
     $this->logActivity($userId, $action, $action);
