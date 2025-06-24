@@ -125,8 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           </label>
                         </div>
                         <div class="mt-3">
-                          <a href="myaccount.html"
-                            class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Login</a>
+                          <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0 text-white">Login</button>
+                      
                         </div>
                         <a href="register.html"
                           class="d-block mt-3 text-right text-muted">Forgot
