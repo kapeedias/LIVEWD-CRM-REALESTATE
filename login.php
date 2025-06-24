@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </a>
                                         <hr />
                                         <?php if (!empty($errors)): ?>
-                                            <div style="alert-danger">
+                                            <div class="alert alert-warning" role="alert">
                                                 <ul>
                                                 <?php foreach ($errors as $err): ?>
                                                     <li><?= htmlspecialchars($err) ?></li>
