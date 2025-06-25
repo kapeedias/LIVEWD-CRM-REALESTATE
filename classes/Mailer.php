@@ -25,7 +25,7 @@ class Mailer {
         $this->fromName  = defined('MAILJET_FROM_NAME')  ? MAILJET_FROM_NAME  : 'YourAppName';
     }
 
-    public function sendResetPasswordEmail($toEmail, $toName, $resetToken) {
+   public function sendResetPasswordEmail($toEmail, $toName, $resetToken) {
         $resetLink = "https://app.livewd.ca/reset-password.php?token=" . urlencode($resetToken);
 
         $subject = "Password Reset Request";
@@ -37,27 +37,43 @@ class Mailer {
             <p>If you didn’t request this, just ignore this message.</p>
         ";
 
-        $payload = [
-            'FromEmail' => $this->fromEmail,
-            'FromName'  => $this->fromName,
-            'Subject'   => $subject,
-            'Text-part' => $text,
-            'Html-part' => $html,
-            'Recipients'=> [['Email' => $toEmail, 'Name' => $toName]]
-        ];
+        $payload = json_encode([
+            'Messages' => [[
+                'From' => [
+                    'Email' => $this->fromEmail,
+                    'Name' => $this->fromName
+                ],
+                'To' => [[
+                    'Email' => $toEmail,
+                    'Name' => $toName
+                ]],
+                'Subject' => $subject,
+                'TextPart' => $text,
+                'HTMLPart' => $html
+            ]]
+        ]);
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://api.mailjet.com/v3/send");
+        curl_setopt($ch, CURLOPT_URL, "https://api.mailjet.com/v3.1/send");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_USERPWD, $this->apiKey . ":" . $this->apiSecret);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json'
+        ]);
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
         curl_close($ch);
 
-        return $httpCode === 200;
+        if ($httpCode !== 200) {
+            error_log("Mailjet Error ($httpCode): $response");
+            return false;
+        }
+
+        return true;
     }
+
 }
