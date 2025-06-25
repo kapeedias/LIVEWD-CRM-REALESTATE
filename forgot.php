@@ -49,12 +49,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (count($attempts) >= $maxAttempts) {
         $errors[] = 'Too many password reset requests from your IP. Please wait and try again later.';
     }
+   // Trim email before sanitization
+    $_POST['useremail'] = trim($_POST['useremail'] ?? '');
 
     // Sanitize and validate input
-    $allowedFields = ['email' => 'email'];
+    $allowedFields = ['useremail' => 'email'];
     try {
         $input = sanitizeInput($_POST, $allowedFields);
-        $email = $input['email'];
+        $email = $input['useremail'];
     } catch (Exception $e) {
         $errors[] = $e->getMessage();
     }
