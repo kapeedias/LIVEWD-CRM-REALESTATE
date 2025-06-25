@@ -20,7 +20,7 @@ class Mailer {
     }
 
     public function sendResetPasswordEmail($toEmail, $toName, $resetToken) {
-        $resetLink = "https://yourdomain.com/reset-password.php?token=" . urlencode($resetToken);
+        $resetLink = "https://app.livewd.ca/reset-password.php?token=" . urlencode($resetToken);
 
         $subject = "Password Reset Request";
         $text = "Hello $toName,\nClick the following link to reset your password:\n$resetLink";
