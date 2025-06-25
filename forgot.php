@@ -45,7 +45,7 @@ $attempts = array_filter($_SESSION['forgot_attempts'], fn($v) => $v === $ip);
 // ==== FORM SUBMISSION HANDLER ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
-
+    $success = [];
     if (count($attempts) >= $maxAttempts) {
         $errors[] = 'Too many password reset requests from your IP. Please wait and try again later.';
     }
