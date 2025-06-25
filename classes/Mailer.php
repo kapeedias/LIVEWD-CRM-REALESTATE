@@ -1,4 +1,10 @@
 <?php
+
+require_once __DIR__ . '/../vendor/autoload.php';  // adjust path
+
+use \Mailjet\Client;
+use \Mailjet\Resources;
+
 class Mailer {
     private $apiKey;
     private $apiSecret;
