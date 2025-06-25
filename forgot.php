@@ -183,51 +183,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 class="img-responsive-brand text-center">
                                         </a>
                                         <hr />
-                                        <?php if (!empty($errors)): ?>
-                                        <div class="alert alert-danger" role="alert">
-                                            <?php foreach ($errors as $err): ?>
-                                            <p><?= htmlspecialchars($err) ?></p>
-                                            <?php endforeach; ?>
-
+                                        <?php if (!empty($success)): ?>
+                                        <div class="alert alert-success">
+                                            <?= implode('<br>', $success) ?>
                                         </div>
                                         <?php endif; ?>
-                                        <form class="forms-sample" <?php if (!empty($success)): ?> <div
-                                            class="alert alert-success">
-                                            <?= implode('<br>', $success) ?>
-                                    </div>
-                                    <?php endif; ?>
 
-                                    <?php if (!empty($errors)): ?>
-                                    <div class="alert alert-danger">
-                                        <?= implode('<br>', $errors) ?>
-                                    </div>
-                                    <?php endif; ?> method="POST" action="">
-                                    <div class="form-group">
-                                        <label for="InputEmail1">Email address</label>
-                                        <input type="email" class="form-control" id="useremail" name="useremail"
-                                            placeholder="Email" required>
-                                    </div>
-                                    <div class="mt-3">
-                                        <div class="g-recaptcha" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY; ?>"></div>
-                                        <script src="https://www.google.com/recaptcha/api.js" async defer>
-                                        </script>
+                                        <?php if (!empty($errors)): ?>
+                                        <div class="alert alert-danger">
+                                            <?= implode('<br>', $errors) ?>
+                                        </div>
+                                        <?php endif; ?>
+                                        <form class="forms-sample" method="POST" action="">
 
-                                        <button type="submit"
-                                            class="btn btn-primary mr-2 mb-2 mb-md-0 mt-3 text-white">Reset</button>
+                                            <div class="form-group">
+                                                <label for="InputEmail1">Email address</label>
+                                                <input type="email" class="form-control" id="useremail" name="useremail"
+                                                    placeholder="Email" required>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="g-recaptcha"
+                                                    data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY; ?>"></div>
+                                                <script src="https://www.google.com/recaptcha/api.js" async defer>
+                                                </script>
 
+                                                <button type="submit"
+                                                    class="btn btn-primary mr-2 mb-2 mb-md-0 mt-3 text-white">Reset</button>
+
+                                            </div>
+                                            <a href="login.php" class="d-block mt-3 text-right text-muted">Login Now
+                                            </a>
+                                        </form>
                                     </div>
-                                    <a href="login.php" class="d-block mt-3 text-right text-muted">Login Now
-                                    </a>
-                                    </form>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
-    </div>
     </div>
     <!-- core:js -->
     <script src="assets/vendors/core/core.js"></script>
