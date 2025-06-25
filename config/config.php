@@ -60,6 +60,12 @@ define('SMTP_PORT', 587);
 define('EMAIL_FROM', 'no-reply@livewd.ca');
 define('EMAIL_FROM_NAME', 'Zentra');
 
+//Mailjet Settings - EMAIL API
+define('MAILJET_API_KEY','02edc6482b85307330c4e38d36a545ce');
+define('MAILJET_SECRET_KEY','39b59d851b62dd1a21f55db0034f52dc');
+define('MAILJET_FROM_EMAIL','info@livewd.ca');
+define('MAILJET_FROM_NAME','Zentra');
+
 // Twilio SMS/WhatsApp settings
 define('TWILIO_ACCOUNT_SID', 'your-twilio-account-sid');
 define('TWILIO_AUTH_TOKEN', 'your-twilio-auth-token');
