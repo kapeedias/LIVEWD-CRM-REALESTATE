@@ -8,6 +8,7 @@ require_once __DIR__ . '/classes/Mailer.php';
 
 // ==== SECURE SESSION START ====
 secureSessionStart();
+echo "PHP time: " . date('Y-m-d H:i:s') . "<br>";
 
 
 try {
