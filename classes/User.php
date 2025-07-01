@@ -111,6 +111,7 @@ class User {
         return false;
 }
 
+/*
     public function resetPassword($token, $newPassword) {
         $stmt = $this->pdo->prepare("SELECT * FROM {$this->userTable} WHERE reset_token = :token AND reset_expires > NOW()");
         $stmt->execute(['token' => $token]);
@@ -128,6 +129,46 @@ class User {
         }
         return false;
 }
+        */
+
+    public function resetPassword(string $token, string $newPassword): bool {
+        // 1. Find the reset request record (token must be valid and not expired and not already used)
+        $stmt = $this->pdo->prepare("
+            SELECT id, user_id FROM zentra_password_resets 
+            WHERE reset_token = :token AND expires_at > NOW() AND status = 'pending'
+            LIMIT 1
+        ");
+        $stmt->execute(['token' => $token]);
+        $resetRequest = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$resetRequest) {
+            return false; // invalid, expired, or already used token
+        }
+
+        $userId = $resetRequest['user_id'];
+        $resetId = $resetRequest['id'];
+
+        // 2. Hash the new password
+        $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
+        if (!$hashed) {
+            return false; // hashing failure
+        }
+
+        // 3. Update the user's password in the users table
+        $updateUser = $this->pdo->prepare("UPDATE general_info_users SET pwd = :pwd WHERE id = :id");
+        $success = $updateUser->execute(['pwd' => $hashed, 'id' => $userId]);
+
+        if ($success) {
+            // 4. Mark the reset request as 'used' (or whatever status you want)
+            $updateReset = $this->pdo->prepare("UPDATE zentra_password_resets SET status = 'used', used_at = NOW() WHERE id = :id");
+            $updateReset->execute(['id' => $resetId]);
+
+            // 5. Log the password reset activity
+            $this->logActivity($userId, "Password reset via token", "Password Reset");
+        }
+
+        return $success;
+    }
+
 
     public function updateProfile($userId, $data) {
         // Fetch current user data for comparison
