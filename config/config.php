@@ -27,8 +27,12 @@ define('SUPPORT_EMAIL', 'support@app.livewd.ca');
 // Base Domain URL - strict validation domain
 $allowed_domain = 'app.livewd.ca';
 $current_domain = $_SERVER['HTTP_HOST'] ?? '';
-$errors = [];
-$success = [];
+
+// Load flash messages from session if available
+$errors = $_SESSION['errors'] ?? [];
+$success = $_SESSION['success'] ?? [];
+// Immediately unset to avoid persisting messages
+unset($_SESSION['errors'], $_SESSION['success']);
 
 if (stripos($current_domain, $allowed_domain) === false) {
     header('HTTP/1.1 403 Forbidden');
@@ -87,6 +91,10 @@ define('REMEMBER_ME_EXPIRY_DAYS', 7);
 // Default User Info
 define('DEFAULT_COUNTRY', 'Canada');
 
+// Password Settings
+define('PASSWORD_MIN_LENGTH', 8);
+define('PASSWORD_MAX_LENGTH', 20);  // optional max length, or you can skip it
+
 // CDN Integration
 define('USE_CDN', true); // Toggle CDN usage
 
@@ -121,12 +129,18 @@ function cdn_asset($path)
 }
 // Basic password complexity check
 function validatePasswordComplexity($password) {
-    if (strlen($password) < 8) return "Password must be at least 8 characters.";
-    if (!preg_match('/[A-Z]/', $password)) return "Password must include an uppercase letter.";
-    if (!preg_match('/[a-z]/', $password)) return "Password must include a lowercase letter.";
-    if (!preg_match('/[0-9]/', $password)) return "Password must include a number.";
-    return true;
+    $errs = [];
+    if (strlen($password) < PASSWORD_MIN_LENGTH) $errs[] = "Password must be at least ".PASSWORD_MIN_LENGTH." characters.";
+    if (defined('PASSWORD_MAX_LENGTH') && strlen($password) > PASSWORD_MAX_LENGTH) $errs[] = "Password must not exceed ".PASSWORD_MAX_LENGTH." characters.";
+    if (!preg_match('/[A-Z]/', $password)) $errs[] = "Password must include an uppercase letter.";
+    if (!preg_match('/[a-z]/', $password)) $errs[] = "Password must include a lowercase letter.";
+    if (!preg_match('/[0-9]/', $password)) $errs[] = "Password must include a number.";
+    if (!preg_match('/[\W_]/', $password)) $errs[] = "Password must include a special character.";
+    if (preg_match('/(.)\\1/', $password)) $errs[] = "Password must not contain repeated characters next to each other.";
+    return empty($errs) ? true : $errs;
 }
+
+
 
 function generatePassword(int $length = 21, string $complexity = 'strong', string $customChars = ''): string {
     $charSets = [

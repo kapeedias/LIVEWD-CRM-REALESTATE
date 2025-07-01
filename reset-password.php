@@ -10,21 +10,23 @@ require_once __DIR__ . '/classes/Mailer.php';
 secureSessionStart();
 
 
-
 try {
     $pdo = Database::getInstance();
     $userObj = new User($pdo);
     $mailer = new Mailer();
 } catch (PDOException $e) {
-    die("Database error: " . htmlspecialchars($e->getMessage()));
+    error_log("DB Init Error: " . $e->getMessage());
+    $errors[] = "A database error occurred. Please try again later.";
 }
 
 // ==== RATE LIMITING CONFIG ====
 $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 $maxAttempts = 5;
 $lockoutTime = 15 * 60; // 15 minutes
-$token = $_GET['token'] ?? '';
-$token = trim($token);
+
+// ==== GET TOKEN FROM URL ====
+$token = trim($_GET['token'] ?? '');
+$user = null;
 
 /* ==== Token Validation ==== */
 
@@ -44,22 +46,26 @@ if (empty($token)) {
     }
 }
 
-// ==== Form Submitted ====
+// ==== PROCESS FORM SUBMISSION ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
-    $newPassword = $_POST['password'] ?? '';
-    $confirm = $_POST['confirm'] ?? '';
+    $newPassword = trim($_POST['password'] ?? '');
+    $confirm     = trim($_POST['confirm'] ?? '');
 
-    if (strlen($newPassword) < 8) {
-        $errors[] = "Password must be at least 8 characters.";
+      // Validate password complexity
+    $validationResult = validatePasswordComplexity($newPassword);
+    if ($validationResult !== true) {
+        $errors = array_merge($errors, $validationResult);
     }
+
+    // Check password confirmation
     if ($newPassword !== $confirm) {
         $errors[] = "Passwords do not match.";
     }
 
-    // reCAPTCHA
+    // reCAPTCHA Verification
     $captcha = $_POST['g-recaptcha-response'] ?? '';
     $verify = file_get_contents("https://www.google.com/recaptcha/api/siteverify?" . http_build_query([
-        'secret' => GOOGLE_RECAPTCHA_SECRET_KEY,
+        'secret'   => GOOGLE_RECAPTCHA_SECRET_KEY,
         'response' => $captcha,
         'remoteip' => $_SERVER['REMOTE_ADDR']
     ]));
@@ -68,22 +74,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
         $errors[] = 'reCAPTCHA verification failed.';
     }
 
-    // If no errors, reset password
+  // If no errors, reset password
     if (empty($errors)) {
         try {
-            $success = $userObj->resetPassword($token, $newPassword)
-                ? "Your password has been reset successfully! You may now log in."
-                : "Reset failed. The token may have expired.";
+            $resetSuccess = $userObj->resetPassword($token, $newPassword);
+            if ($resetSuccess) {
+                // Invalidate token
+                $pdo->prepare("DELETE FROM zentra_password_resets WHERE reset_token = :token")->execute(['token' => $token]);
 
-            // Invalidate token (if not already)
-            $pdo->prepare("DELETE FROM zentra_password_resets WHERE reset_token = :token")->execute(['token' => $token]);
+                // Log activity
+                $userObj->logActivity($user['user_id'], "Password reset via token", "Password Reset");
 
+                $success[] = "Your password has been reset successfully! You may now log in.";
+                // Clear errors to stop form showing
+                $errors = [];
+            } else {
+                $errors[] = "Reset failed. The token may have expired.";
+            }
         } catch (Exception $e) {
             error_log("Password Reset Error: " . $e->getMessage());
-            $errors[] = "Unexpected error. Please try again.";
+            $errors[] = "Unexpected error occurred. Please try again.";
         }
     }
 }
+
 ?>
 
 
@@ -125,6 +139,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                                 class="img-responsive-brand text-center">
                                         </a>
                                         <hr />
+
+                                        <?php if (!empty($success)): ?>
+                                        <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+                                        <a href="login.php" class="btn btn-primary text-white mt-3">Login Now</a>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($errors)): ?>
+                                        <div class="alert alert-danger">
+                                            <?= implode('<br>', array_map('htmlspecialchars', $errors)) ?>
+                                        </div>
+                                        <?php endif; ?>
+
+
                                         <?php if (!empty($success)): ?>
                                         <div class="alert alert-success">
                                             <?= implode('<br>', $success) ?>
@@ -136,13 +163,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                             <?= implode('<br>', $errors) ?>
                                         </div>
                                         <?php endif; ?>
+
+                                        <?php if (empty($success) && empty($errors) || ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($success))): ?>
                                         <form class="forms-sample" method="POST" action="">
 
                                             <div class="form-group">
-                                                <label for="InputEmail1">Email address</label>
-                                                <input type="email" class="form-control" id="useremail" name="useremail"
-                                                    placeholder="Email" required>
+                                                <label for="NewPassword">New Password</label>
+                                                <input type="password" class="form-control" id="password"
+                                                    name="password" placeholder="New Password" required>
                                             </div>
+                                            <div class="form-group">
+                                                <label for="ConfirmNewPassword">New Password</label>
+                                                <input type="password" class="form-control" id="confirm" name="confirm"
+                                                    placeholder="Confirm New Password" required>
+                                            </div>
+
                                             <div class="mt-3">
                                                 <div class="g-recaptcha"
                                                     data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY; ?>"></div>
@@ -150,12 +185,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                                 </script>
 
                                                 <button type="submit"
-                                                    class="btn btn-primary mr-2 mb-2 mb-md-0 mt-3 text-white">Reset</button>
+                                                    class="btn btn-primary mr-2 mb-2 mb-md-0 mt-3 text-white">Reset
+                                                    Password</button>
 
                                             </div>
                                             <a href="login.php" class="d-block mt-3 text-right text-muted">Login Now
                                             </a>
                                         </form>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
