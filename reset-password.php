@@ -151,19 +151,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                         </div>
                                         <?php endif; ?>
 
-
-                                        <?php if (!empty($success)): ?>
-                                        <div class="alert alert-success">
-                                            <?= implode('<br>', $success) ?>
-                                        </div>
-                                        <?php endif; ?>
-
-                                        <?php if (!empty($errors)): ?>
-                                        <div class="alert alert-danger">
-                                            <?= implode('<br>', $errors) ?>
-                                        </div>
-                                        <?php endif; ?>
-
                                         <?php if (empty($success) && empty($errors) || ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($success))): ?>
                                         <form class="forms-sample" method="POST" action="">
 
