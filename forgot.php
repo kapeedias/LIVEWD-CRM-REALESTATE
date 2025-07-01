@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mailSent = $mailer->sendResetPasswordEmail($user['user_email'], $user['first_name'], $token);
 
                 if ($mailSent) {
-                    $success = "A password reset link has been sent to your email.";
+                    $success[] = "A password reset link has been sent to your email.";
                     $identifier = "Password reset requested for user {$user['user_email']}";
                     $userObj->logActivity($user['id'], $identifier, 'Password Reset Requested');
                 } else {
