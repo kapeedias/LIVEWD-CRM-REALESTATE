@@ -40,7 +40,7 @@ $attempts = array_filter($_SESSION['login_attempts'], fn($v) => $v === $ip);
 
 // ==== LOGIN HANDLER ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $errors = [];
+
     if (count($attempts) >= $maxAttempts) {
         $errors[] = 'Too many login attempts. Please wait before trying again.';
     }
