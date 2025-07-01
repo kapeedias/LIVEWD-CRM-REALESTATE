@@ -29,7 +29,7 @@ $token = trim($_GET['token'] ?? '');
 $user = null;
 
 /* ==== Token Validation ==== */
-
+/*
 if (empty($token)) {
     $errors[] = "Missing reset token.";
 } else {
@@ -43,6 +43,24 @@ if (empty($token)) {
 
     if (!$user) {
         $errors[] = "Invalid or expired reset token.";
+    }
+}
+*/
+
+if (empty($token)) {
+    $errors[] = "Missing reset token.";
+} else {
+    try {
+        $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email FROM zentra_password_resets pr JOIN general_info_users u ON pr.user_id = u.id WHERE pr.reset_token = :token AND pr.expires_at > NOW() LIMIT 1");
+        $stmt->execute(['token' => $token]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            $errors[] = "Reset failed. The token may have expired. Please try again.";
+        }
+    } catch (PDOException $e) {
+        error_log("DB Error on token validation: " . $e->getMessage());
+        $errors[] = "An unexpected error occurred. Please try again later.";
     }
 }
 
@@ -149,9 +167,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                         <div class="alert alert-danger">
                                             <?= implode('<br>', array_map('htmlspecialchars', $errors)) ?>
                                         </div>
-                                        <?php endif; ?>
+                                            <a href="forgot.php" class="btn btn-secondary mt-3">Try Forgot Password Again</a>
 
-                                        <?php if (empty($success) && empty($errors) || ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($success))): ?>
+                                        <?php else: ?>
                                         <form class="forms-sample" method="POST" action="">
 
                                             <div class="form-group">
