@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           class="btn btn-primary mr-2 mb-2 mb-md-0 mt-3 text-white">Login</button>
 
                       </div>
-                      <a href="register.html" class="d-block mt-3 text-right text-muted">Forgot
+                      <a href="forgot.php" class="d-block mt-3 text-right text-muted">Forgot
                         Password?
                       </a>
                     </form>
