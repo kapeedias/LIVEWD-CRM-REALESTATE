@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                                     name="password" placeholder="New Password" required>
                                             </div>
                                             <div class="form-group">
-                                                <label for="ConfirmNewPassword">New Password</label>
+                                                <label for="ConfirmNewPassword">Confirm New Password</label>
                                                 <input type="password" class="form-control" id="confirm" name="confirm"
                                                     placeholder="Confirm New Password" required>
                                             </div>
