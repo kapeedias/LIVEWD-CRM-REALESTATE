@@ -40,19 +40,19 @@ if (!empty($token)) {
 
         if ($user && strtotime($user['expires_at']) > time()) {
             $tokenValid = true;
-            $fm_dorisplay=1;
+            $form_display=1;
         } else {
             $errors[] = "Reset failed. The token may have expired.";
-            $fm_dorisplay=0;
+            $form_display=0;
         }
     } catch (PDOException $e) {
         error_log("Token Validation Error: " . $e->getMessage());
         $errors[] = "An unexpected error occurred. Please try again later.";
-        $fm_dorisplay=0;
+        $form_display=0;
     }
 } else {
     $errors[] = "Missing reset token.";
-    $fm_dorisplay=0;
+    $form_display=0;
 }
 
 
@@ -99,13 +99,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && is($tokenValid)) 
                 $form_display = 0;
             } else {
                 $errors[] = "Reset failed. The token may have expired.";
-                $fm_dorisplay=0;
+                $form_display=0;
             }
         } catch (Exception $e) {
             error_log("Password Reset Error: " . $e->getMessage());
             $errors[] = "Reset failed: " . $e->getMessage()." <br />"; // TEMPORARY DEBUG
             $errors[] = "Unexpected error occurred. Please try again.";
-            $fm_dorisplay=0;
+            $form_display=0;
         }
     }
 }
@@ -165,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && is($tokenValid)) 
 
                                         <?php endif; ?>
 
-                                        <?php if ($fm_display == 1): ?>
+                                        <?php if ($form_display == 1): ?>
                                         <form class="forms-sample" method="POST" action="">
 
                                             <div class="form-group">
