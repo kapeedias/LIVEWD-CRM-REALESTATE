@@ -148,7 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && $tokenValid) {
                                                 class="img-responsive-brand text-center">
                                         </a>
                                         <hr />
-
+                                        <h3>Reset Password</h3>
+                                        <hr />
                                         <?php if (!empty($success)): ?>
                                         <div class="alert alert-success">
                                             <?= implode('<br>', array_map('htmlspecialchars', $success)) ?>
