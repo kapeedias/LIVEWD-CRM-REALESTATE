@@ -52,7 +52,7 @@ if (!empty($token)) {
 }
 
 // debug time 
-/*
+
 $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
     FROM zentra_password_resets pr
     JOIN general_info_users u ON pr.user_id = u.id
@@ -73,7 +73,7 @@ if ($user) {
 } else {
     echo "❌ No token found.<br>";
 }
-*/
+
 // end degub time
 
 // ==== PROCESS FORM SUBMISSION ====
