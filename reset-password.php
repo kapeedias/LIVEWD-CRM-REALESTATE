@@ -9,7 +9,7 @@ require_once __DIR__ . '/classes/Mailer.php';
 // ==== SECURE SESSION START ====
 secureSessionStart();
 $tokenValid = false;
-
+$form_display = '';
 
 try {
     $pdo = Database::getInstance();
@@ -40,43 +40,24 @@ if (!empty($token)) {
 
         if ($user && strtotime($user['expires_at']) > time()) {
             $tokenValid = true;
+            $fm_dorisplay=1;
         } else {
             $errors[] = "Reset failed. The token may have expired.";
+            $fm_dorisplay=0;
         }
     } catch (PDOException $e) {
         error_log("Token Validation Error: " . $e->getMessage());
         $errors[] = "An unexpected error occurred. Please try again later.";
+        $fm_dorisplay=0;
     }
 } else {
     $errors[] = "Missing reset token.";
+    $fm_dorisplay=0;
 }
 
-// debug time 
-$stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
-    FROM zentra_password_resets pr
-    JOIN general_info_users u ON pr.user_id = u.id
-    WHERE pr.reset_token = :token and pr.status <> 'used'
-    LIMIT 1");
-$stmt->execute(['token' => $token]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if ($user) {
-    echo "Token expires_at (DB): " . $user['expires_at'] . "<br>";
-    echo "PHP NOW: " . date('Y-m-d H:i:s') . "<br>";
-    
-    if (strtotime($user['expires_at']) > time()) {
-        echo "✅ Token is still valid.<br>";
-    } else {
-        echo "❌ Token has expired.<br>";
-    }
-} else {
-    echo "❌ No token found.<br>";
-}
-
-// end degub time
 
 // ==== PROCESS FORM SUBMISSION ====
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && is($tokenValid)) {
     $newPassword = trim($_POST['password'] ?? '');
     $confirm     = trim($_POST['confirm'] ?? '');
 
@@ -115,13 +96,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
 
                 $success[] = "Your password has been reset successfully! You may now log in.";
                 $tokenValid = false; // So form doesn't show again
+                $form_display = 0;
             } else {
                 $errors[] = "Reset failed. The token may have expired.";
+                $fm_dorisplay=0;
             }
         } catch (Exception $e) {
             error_log("Password Reset Error: " . $e->getMessage());
             $errors[] = "Reset failed: " . $e->getMessage()." <br />"; // TEMPORARY DEBUG
             $errors[] = "Unexpected error occurred. Please try again.";
+            $fm_dorisplay=0;
         }
     }
 }
@@ -181,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
 
                                         <?php endif; ?>
 
-                                        <?php if (empty($errors)): ?>
+                                        <?php if ($fm_display == 1): ?>
                                         <form class="forms-sample" method="POST" action="">
 
                                             <div class="form-group">
