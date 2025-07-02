@@ -135,7 +135,7 @@ class User {
         // 1. Find the reset request record (token must be valid and not expired and not already used)
         $stmt = $this->pdo->prepare("
             SELECT id, user_id FROM zentra_password_resets 
-            WHERE reset_token = :token AND expires_at > NOW() AND status = 'pending'
+            WHERE reset_token = :token AND expires_at > NOW() AND status = 'active'
             LIMIT 1
         ");
         $stmt->execute(['token' => $token]);

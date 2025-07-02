@@ -142,7 +142,6 @@ function validatePasswordComplexity($password) {
 }
 
 
-
 function generatePassword(int $length = 21, string $complexity = 'strong', string $customChars = ''): string {
     $charSets = [
         'lowercase' => 'abcdefghijklmnopqrstuvwxyz',
