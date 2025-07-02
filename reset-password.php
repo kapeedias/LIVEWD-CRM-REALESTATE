@@ -30,24 +30,8 @@ $token = trim($_GET['token'] ?? '');
 $user = null;
 
 /* ==== Token Validation ==== */
+
 /*
-if (empty($token)) {
-    $errors[] = "Missing reset token.";
-} else {
-    $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
-        FROM zentra_password_resets pr
-        JOIN general_info_users u ON pr.user_id = u.id
-        WHERE pr.reset_token = :token AND pr.expires_at > NOW()
-        LIMIT 1");
-    $stmt->execute(['token' => $token]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$user) {
-        $errors[] = "Invalid or expired reset token.";
-    }
-}
-*/
-
 if (empty($token)) {
     $errors[] = "Missing reset token.";
 } else {
@@ -63,6 +47,28 @@ if (empty($token)) {
         error_log("DB Error on token validation: " . $e->getMessage());
         $errors[] = "An unexpected error occurred. Please try again later.";
     }
+}
+*/
+
+$stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
+    FROM zentra_password_resets pr
+    JOIN general_info_users u ON pr.user_id = u.id
+    WHERE pr.reset_token = :token
+    LIMIT 1");
+$stmt->execute(['token' => $token]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($user) {
+    echo "Token expires_at (DB): " . $user['expires_at'] . "<br>";
+    echo "PHP NOW: " . date('Y-m-d H:i:s') . "<br>";
+    
+    if (strtotime($user['expires_at']) > time()) {
+        echo "✅ Token is still valid.<br>";
+    } else {
+        echo "❌ Token has expired.<br>";
+    }
+} else {
+    echo "❌ No token found.<br>";
 }
 
 // ==== PROCESS FORM SUBMISSION ====
