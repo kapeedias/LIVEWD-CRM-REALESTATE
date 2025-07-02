@@ -169,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                         <hr />
 
                                         <?php if (!empty($success)): ?>
-                                        <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+                                        <div class="alert alert-success"> <?= implode('<br>', array_map('htmlspecialchars', $success)) ?></div>
                                         <a href="login.php" class="btn btn-primary text-white mt-3">Login Now</a>
                                         <?php endif; ?>
 
