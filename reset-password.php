@@ -160,9 +160,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && $tokenValid) {
                                         <div class="alert alert-danger">
                                             <?= implode('<br>', array_map('htmlspecialchars', $errors)) ?>
                                         </div>
-                                        <a href="forgot.php" class="btn btn-secondary mt-3">Try Forgot Password
-                                            Again</a>
+                                        
+                                        <?php endif; ?>
 
+                                        <?php if(!$tokenValid): ?>
+                                           <a href="forgot.php" class="btn btn-secondary mt-3">Try Forgot Password
+                                            Again</a>
                                         <?php endif; ?>
 
                                         <?php if ($form_display == 1): ?>
