@@ -121,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
             }
         } catch (Exception $e) {
             error_log("Password Reset Error: " . $e->getMessage());
+            $errors[] = "Reset failed: " . $e->getMessage()." <br />"; // TEMPORARY DEBUG
             $errors[] = "Unexpected error occurred. Please try again.";
         }
     }
