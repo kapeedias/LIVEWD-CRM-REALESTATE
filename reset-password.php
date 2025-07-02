@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && $tokenValid) {
                                         
                                         <?php endif; ?>
 
-                                        <?php if(!$tokenValid): ?>
+                                        <?php if (!$tokenValid && $form_display == 1): ?>
                                            <a href="forgot.php" class="btn btn-secondary mt-3">Try Forgot Password
                                             Again</a>
                                         <?php endif; ?>
