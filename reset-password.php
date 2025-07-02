@@ -52,7 +52,6 @@ if (!empty($token)) {
 }
 
 // debug time 
-
 $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
     FROM zentra_password_resets pr
     JOIN general_info_users u ON pr.user_id = u.id
@@ -131,7 +130,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -151,7 +149,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
 </head>
-
 <body class="sidebar-dark">
     <div class="main-wrapper">
         <div class="page-wrapper full-page">
@@ -169,7 +166,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                         <hr />
 
                                         <?php if (!empty($success)): ?>
-                                        <div class="alert alert-success"> <?= implode('<br>', array_map('htmlspecialchars', $success)) ?></div>
+                                        <div class="alert alert-success">
+                                            <?= implode('<br>', array_map('htmlspecialchars', $success)) ?>
+                                        </div>
                                         <a href="login.php" class="btn btn-primary text-white mt-3">Login Now</a>
                                         <?php endif; ?>
 
