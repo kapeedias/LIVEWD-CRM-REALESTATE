@@ -57,7 +57,7 @@ if (!empty($token)) {
 
 
 // ==== PROCESS FORM SUBMISSION ====
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && is($tokenValid)) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && $tokenValid) {
     $newPassword = trim($_POST['password'] ?? '');
     $confirm     = trim($_POST['confirm'] ?? '');
 
