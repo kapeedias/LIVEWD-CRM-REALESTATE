@@ -183,6 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 class="img-responsive-brand text-center">
                                         </a>
                                         <hr />
+                                        <h3>Forgot Password</h3>
+                                        <hr />
                                         <?php if (!empty($success)): ?>
                                         <div class="alert alert-success">
                                             <?= implode('<br>', $success) ?>
