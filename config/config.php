@@ -137,7 +137,7 @@ function validatePasswordComplexity($password) {
     if (!preg_match('/[a-z]/', $password)) $errs[] = "Password must include a lowercase letter.";
     if (!preg_match('/[0-9]/', $password)) $errs[] = "Password must include a number.";
     if (!preg_match('/[\W_]/', $password)) $errs[] = "Password must include a special character.";
-    if (preg_match('/(.)\\1/', $password)) $errs[] = "Password must not contain repeated characters next to each other.";
+    //if (preg_match('/(.)\\1/', $password)) $errs[] = "Password must not contain repeated characters next to each other.";
     return empty($errs) ? true : $errs;
 }
 

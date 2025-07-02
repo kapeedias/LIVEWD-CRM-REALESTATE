@@ -8,7 +8,7 @@ require_once __DIR__ . '/classes/Mailer.php';
 
 // ==== SECURE SESSION START ====
 secureSessionStart();
-echo "PHP time: " . date('Y-m-d H:i:s') . "<br>";
+$tokenValid = false;
 
 
 try {
@@ -22,8 +22,6 @@ try {
 
 // ==== RATE LIMITING CONFIG ====
 $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-$maxAttempts = 5;
-$lockoutTime = 15 * 60; // 15 minutes
 
 // ==== GET TOKEN FROM URL ====
 $token = trim($_GET['token'] ?? '');
@@ -31,25 +29,30 @@ $user = null;
 
 /* ==== Token Validation ==== */
 
-/*
-if (empty($token)) {
-    $errors[] = "Missing reset token.";
-} else {
+if (!empty($token)) {
     try {
-        $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email FROM zentra_password_resets pr JOIN general_info_users u ON pr.user_id = u.id WHERE pr.reset_token = :token AND pr.expires_at > NOW() LIMIT 1");
+        $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
+            FROM zentra_password_resets pr
+            JOIN general_info_users u ON pr.user_id = u.id
+            WHERE pr.reset_token = :token LIMIT 1");
         $stmt->execute(['token' => $token]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$user) {
-            $errors[] = "Reset failed. The token may have expired. Please try again.";
+        if ($user && strtotime($user['expires_at']) > time()) {
+            $tokenValid = true;
+        } else {
+            $errors[] = "Reset failed. The token may have expired.";
         }
     } catch (PDOException $e) {
-        error_log("DB Error on token validation: " . $e->getMessage());
+        error_log("Token Validation Error: " . $e->getMessage());
         $errors[] = "An unexpected error occurred. Please try again later.";
     }
+} else {
+    $errors[] = "Missing reset token.";
 }
-*/
 
+// debug time 
+/*
 $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
     FROM zentra_password_resets pr
     JOIN general_info_users u ON pr.user_id = u.id
@@ -70,6 +73,8 @@ if ($user) {
 } else {
     echo "❌ No token found.<br>";
 }
+*/
+// end degub time
 
 // ==== PROCESS FORM SUBMISSION ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
@@ -104,15 +109,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
         try {
             $resetSuccess = $userObj->resetPassword($token, $newPassword);
             if ($resetSuccess) {
-                // Invalidate token
-                $pdo->prepare("DELETE FROM zentra_password_resets WHERE reset_token = :token")->execute(['token' => $token]);
+                $pdo->prepare("UPDATE zentra_password_resets SET status = 'used' WHERE reset_token = :token")
+                    ->execute(['token' => $token]);
 
-                // Log activity
                 $userObj->logActivity($user['user_id'], "Password reset via token", "Password Reset");
 
                 $success[] = "Your password has been reset successfully! You may now log in.";
-                // Clear errors to stop form showing
-                $errors = [];
+                $tokenValid = false; // So form doesn't show again
             } else {
                 $errors[] = "Reset failed. The token may have expired.";
             }
@@ -122,7 +125,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
         }
     }
 }
-
 ?>
 
 
@@ -174,7 +176,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                         <div class="alert alert-danger">
                                             <?= implode('<br>', array_map('htmlspecialchars', $errors)) ?>
                                         </div>
-                                            <a href="forgot.php" class="btn btn-secondary mt-3">Try Forgot Password Again</a>
+                                        <a href="forgot.php" class="btn btn-secondary mt-3">Try Forgot Password
+                                            Again</a>
 
                                         <?php else: ?>
                                         <form class="forms-sample" method="POST" action="">
