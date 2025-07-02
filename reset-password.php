@@ -55,7 +55,7 @@ if (!empty($token)) {
 $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
     FROM zentra_password_resets pr
     JOIN general_info_users u ON pr.user_id = u.id
-    WHERE pr.reset_token = :token
+    WHERE pr.reset_token = :token and pr.status <> 'used'
     LIMIT 1");
 $stmt->execute(['token' => $token]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -179,7 +179,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                         <a href="forgot.php" class="btn btn-secondary mt-3">Try Forgot Password
                                             Again</a>
 
-                                        <?php else: ?>
+                                        <?php endif; ?>
+
+                                        <?php if (empty($errors)): ?>
                                         <form class="forms-sample" method="POST" action="">
 
                                             <div class="form-group">
