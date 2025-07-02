@@ -40,7 +40,7 @@ $attempts = array_filter($_SESSION['login_attempts'], fn($v) => $v === $ip);
 
 // ==== LOGIN HANDLER ====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $errors = [];
+
     if (count($attempts) >= $maxAttempts) {
         $errors[] = 'Too many login attempts. Please wait before trying again.';
     }
@@ -188,15 +188,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 class="img-responsive-brand text-center">
                                         </a>
                                         <hr />
-                                        <?php if (!empty($success)): ?>
-                                        <div class="alert alert-success">
-                                            <?= implode('<br>', $success) ?>
-                                        </div>
-                                        <?php endif; ?>
-
+                                        <h4 class="text-center">Members Login</h4>
+                                        <hr />
                                         <?php if (!empty($errors)): ?>
-                                        <div class="alert alert-danger">
-                                            <?= implode('<br>', $errors) ?>
+                                        <div class="alert alert-danger" role="alert">
+                                            <?php foreach ($errors as $err): ?>
+                                            <p><?= htmlspecialchars($err) ?></p>
+                                            <?php endforeach; ?>
+
                                         </div>
                                         <?php endif; ?>
                                         <form class="forms-sample" method="POST" action="">
