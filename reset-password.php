@@ -179,7 +179,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                         <a href="forgot.php" class="btn btn-secondary mt-3">Try Forgot Password
                                             Again</a>
 
-                                        <?php else: ?>
+                                        <?php endif; ?>
+
+                                        <?php if (empty($errors)): ?>
                                         <form class="forms-sample" method="POST" action="">
 
                                             <div class="form-group">
