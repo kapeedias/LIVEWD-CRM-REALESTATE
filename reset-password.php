@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && $tokenValid) {
                 $tokenValid = false; // So form doesn't show again
                 $form_display = 0;
             } else {
-                $errors[] = "Reset failed. The token may have expired.";
+                $errors[] = 'Reset failed. The token may have expired. <a href="login.php" class="btn btn-sm btn-outline-primary mt-2">Go back to Login</a>';
                 $form_display=0;
             }
         } catch (Exception $e) {
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors) && $tokenValid) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title><?= APP_NAME ?> - Login</title>
+    <title><?= APP_NAME ?> - Reset Password</title>
     <!-- core:css -->
     <link rel="stylesheet" href="assets/vendors/core/core.css">
     <!-- endinject -->
