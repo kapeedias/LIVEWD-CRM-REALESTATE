@@ -34,7 +34,7 @@ if (!empty($token)) {
         $stmt = $pdo->prepare("SELECT pr.user_id, u.user_email, pr.expires_at
             FROM zentra_password_resets pr
             JOIN general_info_users u ON pr.user_id = u.id
-            WHERE pr.reset_token = :token LIMIT 1");
+            WHERE pr.reset_token = :token and pr.status='active' LIMIT 1");
         $stmt->execute(['token' => $token]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
