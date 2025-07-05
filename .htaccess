@@ -1,0 +1,41 @@
+# -------------------------------------------------------------------
+# SECURITY & CLEAN URL CONFIG FOR app.livewd.ca
+# -------------------------------------------------------------------
+
+# Enable Rewrite Engine
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # -----------------------------------------------------------------
+  # 1. REMOVE .php EXTENSION FROM URL
+  # -----------------------------------------------------------------
+  # Rewrite /page to /page.php if it exists
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}.php -f
+  RewriteRule ^(.+?)/?$ $1.php [L]
+
+  # -----------------------------------------------------------------
+  # 2. BLOCK DIRECT ACCESS TO .PHP FILES INSIDE _include/
+  # -----------------------------------------------------------------
+  RewriteRule ^_include/.*\.php$ - [F,L]
+</IfModule>
+
+# -------------------------------------------------------------------
+# 3. BLOCK ACCESS TO SENSITIVE FILES (GLOBALLY)
+# -------------------------------------------------------------------
+<FilesMatch "^(config\.php|db\.php|headsection\.php|secrets\.php|env\.php|\.env)$">
+  Order Allow,Deny
+  Deny from all
+</FilesMatch>
+
+# -------------------------------------------------------------------
+# 4. PREVENT DIRECTORY LISTING
+# -------------------------------------------------------------------
+Options -Indexes
+
+# -------------------------------------------------------------------
+# 5. DISABLE ERROR DISPLAY IN PRODUCTION
+# -------------------------------------------------------------------
+php_flag display_errors Off
+php_flag display_startup_errors Off
+php_value error_reporting 0
