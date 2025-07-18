@@ -58,7 +58,7 @@ if (!isset($_GET['code']) || empty($_GET['code'])) {
     <link rel="stylesheet" href="assets/vendors/flag-icon-css/css/flag-icon.min.css">
     <!-- endinject -->
     <!-- Layout styles -->
-    <link rel="stylesheet" href="assets/css/demo_1/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
     <!-- End layout styles -->
     <link rel="shortcut icon" href="assets/images/favicon.png" />
 </head>
