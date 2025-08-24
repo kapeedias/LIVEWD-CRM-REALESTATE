@@ -195,7 +195,7 @@
 							<div class="dropdown-menu" aria-labelledby="profileDropdown">
 								<div class="dropdown-header d-flex flex-column align-items-center">
 									<div class="figure mb-3">
-										<img src="https://via.placeholder.com/80x80" alt="">
+										<img src="https://placehold.co/500/000000/FFF/?text=<?php echo substr($_SESSION['user_name'], 0, 1); ?>&font=OpenSans" alt="userr">
 									</div>
 									<div class="info text-center">
 										<p class="name font-weight-bold mb-0"><?php echo htmlspecialchars($_SESSION['user_name']); ?></p>
