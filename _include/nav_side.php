@@ -1,6 +1,6 @@
 <nav class="sidebar">
       <div class="sidebar-header">
-        <a href="#" class="sidebar-brand">
+        <a href="myaccount.php" class="sidebar-brand">
           <img src="assets/images/zentra-logo.png" class="img-responsive-brand">
         </a>
         <div class="sidebar-toggler not-active">
@@ -13,7 +13,7 @@
         <ul class="nav">
           <li class="nav-item nav-category">Main</li>
           <li class="nav-item">
-            <a href="dashboard-one.php" class="nav-link">
+            <a href="myaccount.php" class="nav-link">
               <i class="link-icon" data-feather="box"></i>
               <span class="link-title">Dashboard</span>
             </a>
