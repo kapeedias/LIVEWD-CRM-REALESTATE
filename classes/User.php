@@ -212,4 +212,29 @@ class User {
     $this->logActivity($userId, $action, $action);
 }
 
+    public function getInitials(?string $firstName = null, ?string $lastName = null): string {
+    // If no name at all, return "Z"
+    if (empty($firstName) && empty($lastName)) {
+        return "Z";
+    }
+
+    // Trim values
+    $firstName = trim((string)$firstName);
+    $lastName  = trim((string)$lastName);
+
+    // Always use first letter of firstName if available
+    $initials = '';
+    if (!empty($firstName)) {
+        $initials .= strtoupper(substr($firstName, 0, 1));
+    }
+
+    // If lastName provided, add its first letter
+    if (!empty($lastName)) {
+        $initials .= strtoupper(substr($lastName, 0, 1));
+    }
+
+    // If still empty somehow, fallback to "Z"
+    return $initials !== '' ? $initials : 'Z';
+}
+
 }
