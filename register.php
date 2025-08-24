@@ -155,17 +155,8 @@ unset($_SESSION['register_errors'], $_SESSION['register_success']);
                                 <hr />
                                 Members Registration
                                 <hr />
-                                <?php if (!empty($success)): ?>
-                                    <div class="alert alert-success">
-                                        <?= implode('<br>', $success) ?>
-                                    </div>
-                                <?php endif; ?>
+                                <?php require_once('_include/error_handling.php'); ?>
 
-                                <?php if (!empty($errors)): ?>
-                                    <div class="alert alert-danger">
-                                        <?= implode('<br>', $errors) ?>
-                                    </div>
-                                <?php endif; ?>
                                 <form id="forms-register" method="POST"
                                     action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
                                     <input type="hidden" name="recaptcha_response" id="recaptchaResponse">
@@ -176,12 +167,11 @@ unset($_SESSION['register_errors'], $_SESSION['register_success']);
                                     <div class="form-group"><label>Email address</label><input type="email"
                                             name="user_email" class="form-control" required></div>
                                     <div class="mt-3">
-                                     <div class="g-recaptcha"
-                          data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY; ?>"></div>
-                        <script src="https://www.google.com/recaptcha/api.js" async defer>
-                        </script>    
-                                    <button type="submit"
-                                            class="btn btn-primary text-white mt-3">Register</button></div>
+                                        <div class="g-recaptcha" data-sitekey="<?= GOOGLE_RECAPTCHA_SITE_KEY; ?>"></div>
+                                        <script src="https://www.google.com/recaptcha/api.js" async defer>
+                                        </script>
+                                        <button type="submit" class="btn btn-primary text-white mt-3">Register</button>
+                                    </div>
                                     <a href="login.php" class="d-block mt-3 text-right text-muted">Login Now</a>
                                 </form>
                             </div>
