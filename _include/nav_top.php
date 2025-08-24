@@ -190,7 +190,7 @@
 						</li>
 						<li class="nav-item dropdown nav-profile">
 							<a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-								<img src="https://placehold.co/500/000000/FFF/?text=<?php echo $initials = $user->getInitials(htmlspecialchars($_SESSION['user_name'])); ?>&font=OpenSans" alt="userr">
+								<img src="https://placehold.co/500/000000/FFF/?text=<?php echo $user->getInitials(htmlspecialchars($_SESSION['user_name'])); ?>&font=OpenSans" alt="userr">
 							</a>
 							<div class="dropdown-menu" aria-labelledby="profileDropdown">
 								<div class="dropdown-header d-flex flex-column align-items-center">
